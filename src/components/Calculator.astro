@@ -393,7 +393,7 @@ import {
       const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
       const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
 
-      // Show the OTHER unit system for reference
+      // Show the OTHER unit system for reference - ADD dark classes here
       const debugInfo = useMetric ? `
         <div class="text-xs text-muted-foreground mb-2">
           <span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)
@@ -404,11 +404,11 @@ import {
         </div>
       `;
 
-      // Render profit analysis
+      // Render profit analysis - UPDATE this section with proper semantic classes
       resultsContainer.innerHTML = `
         <div class="space-y-4">
           ${debugInfo}
-          <div class="border-b pb-3">
+          <div class="border-b border-border pb-3">
             <h4 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Size Tier</h4>
             <p class="text-lg font-semibold">${sizeTier.replace('_', ' ')}</p>
           </div>
@@ -416,13 +416,13 @@ import {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <h4 class="font-medium text-sm text-muted-foreground">Net Profit</h4>
-              <p class="text-lg font-semibold ${profitability.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}">
+              <p class="text-lg font-semibold ${profitability.netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
                 ${formatCurrency(profitability.netProfit)}
               </p>
             </div>
             <div>
               <h4 class="font-medium text-sm text-muted-foreground">Profit Margin</h4>
-              <p class="text-lg font-semibold ${profitability.profitMargin >= 15 ? 'text-green-600' : 'text-yellow-600'}">
+              <p class="text-lg font-semibold ${profitability.profitMargin >= 15 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
                 ${profitability.profitMargin.toFixed(1)}%
               </p>
             </div>
@@ -439,7 +439,7 @@ import {
             </div>
           </div>
 
-          <div class="border-t pt-3">
+          <div class="border-t border-border pt-3">
             <h4 class="font-medium text-sm text-muted-foreground mb-2">Fee Breakdown</h4>
             <div class="space-y-1 text-sm">
               <div class="flex justify-between">
@@ -458,58 +458,54 @@ import {
                 <span>Total for ${averageUnits} units:</span>
                 <span>${formatCurrency(fees.storageMonthlyFee * averageUnits)}</span>
               </div>
-              <div class="flex justify-between font-semibold border-t pt-1">
+              <div class="flex justify-between font-semibold border-t border-border pt-1">
                 <span>Total Fees:</span>
                 <span>${formatCurrency(profitability.totalFees)}</span>
               </div>
             </div>
           </div>
 
-          <div class="border-t pt-3">
+          <div class="border-t border-border pt-3">
             <h4 class="font-medium text-sm text-muted-foreground">Break-even Price</h4>
             <p class="text-lg font-semibold">${formatCurrency(profitability.breakEvenPrice)}</p>
           </div>
         </div>
       `;
 
-      // Render success criteria
+      // Render success criteria with dark mode support
       const passedCount = criteria.filter(c => c.passed).length;
       
-      // Debug: let's see what's actually happening
-      console.log('Criteria results:', criteria);
-      console.log('Passed count:', passedCount);
-      
-      // Define color schemes based on criteria passed
+      // Define color schemes with dark mode support
       let colorScheme;
       if (passedCount === 4) {
         colorScheme = {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-500'
+          bg: 'bg-green-50 dark:bg-green-950',
+          text: 'text-green-700 dark:text-green-300',
+          border: 'border-green-500 dark:border-green-600'
         };
       } else if (passedCount === 3) {
         colorScheme = {
-          bg: 'bg-blue-50',
-          text: 'text-blue-700',
-          border: 'border-blue-500'
+          bg: 'bg-blue-50 dark:bg-blue-950',
+          text: 'text-blue-700 dark:text-blue-300',
+          border: 'border-blue-500 dark:border-blue-600'
         };
       } else if (passedCount === 2) {
         colorScheme = {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-500'
+          bg: 'bg-yellow-50 dark:bg-yellow-950',
+          text: 'text-yellow-700 dark:text-yellow-300',
+          border: 'border-yellow-500 dark:border-yellow-600'
         };
       } else if (passedCount === 1) {
         colorScheme = {
-          bg: 'bg-orange-50',
-          text: 'text-orange-700',
-          border: 'border-orange-500'
+          bg: 'bg-orange-50 dark:bg-orange-950',
+          text: 'text-orange-700 dark:text-orange-300',
+          border: 'border-orange-500 dark:border-orange-600'
         };
       } else {
         colorScheme = {
-          bg: 'bg-red-50',
-          text: 'text-red-700',
-          border: 'border-red-500'
+          bg: 'bg-red-50 dark:bg-red-950',
+          text: 'text-red-700 dark:text-red-300',
+          border: 'border-red-500 dark:border-red-600'
         };
       }
 
@@ -530,14 +526,14 @@ import {
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
                 ${criterion.passed 
-                  ? '<div class="w-3 h-3 bg-green-500 rounded-full"></div>' 
-                  : '<div class="w-3 h-3 bg-red-500 rounded-full"></div>'
+                  ? '<div class="w-3 h-3 bg-green-500 dark:bg-green-400 rounded-full"></div>' 
+                  : '<div class="w-3 h-3 bg-red-500 dark:bg-red-400 rounded-full"></div>'
                 }
               </div>
               <div class="flex-1">
-                <p class="text-base font-semibold">${criterion.label}</p>
-                <p class="text-sm text-muted-foreground mt-1">${criterion.value} (${criterion.threshold})</p>
-                <p class="text-sm text-muted-foreground">${criterion.message}</p>
+                <p class="text-base font-semibold text-foreground dark:text-foreground">${criterion.label}</p>
+                <p class="text-sm text-muted-foreground dark:text-muted-foreground mt-1">${criterion.value} (${criterion.threshold})</p>
+                <p class="text-sm text-muted-foreground dark:text-muted-foreground">${criterion.message}</p>
               </div>
             </div>
           `).join('')}

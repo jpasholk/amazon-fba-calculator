@@ -17,8 +17,27 @@ const { title, description = "Calculate profit margins and fees for your Amazon 
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
+        <script>
+            // Apply dark class based on system preference immediately to prevent flash
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+        </script>
     </head>
     <body class="bg-background text-foreground min-h-screen">
         <slot />
+        <script>
+            // Listen for system theme changes and update accordingly
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            function updateTheme(e) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            updateTheme(mediaQuery);
+            mediaQuery.addEventListener('change', updateTheme);
+        </script>
     </body>
 </html>
