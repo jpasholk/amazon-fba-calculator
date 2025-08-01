@@ -1,0 +1,550 @@
+---
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/starwind/card";
+import { Button } from "@/components/starwind/button";
+import { Input } from "@/components/starwind/input";
+import { Label } from "@/components/starwind/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator } from "@/components/starwind/select";
+import { Switch } from "@/components/starwind/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/starwind/dialog";
+---
+
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Product Info Card with Dialog -->
+  <Card class="w-full">
+    <CardHeader>
+      <div class="flex justify-between items-start">
+        <div>
+          <CardTitle>Amazon FBA Calculator 2025</CardTitle>
+          <CardDescription>Calculate profit margins and fees for your Amazon FBA products</CardDescription>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+          <div class="flex items-center gap-2">
+            <Label for="unit-toggle" class="text-sm font-medium">
+              Use Imperial Units
+            </Label>
+            <Switch id="unit-toggle" />
+          </div>
+          <span id="unit-display" class="text-xs text-muted-foreground">
+            Currently: Metric (cm/kg)
+          </span>
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <!-- Product Summary (shown after entry) -->
+      <div id="product-summary" class="hidden space-y-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span class="text-muted-foreground">Product:</span>
+            <p class="font-medium" id="summary-name">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Selling Price:</span>
+            <p class="font-medium" id="summary-price">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Cost:</span>
+            <p class="font-medium" id="summary-cost">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Category:</span>
+            <p class="font-medium" id="summary-category">-</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t pt-4">
+          <div>
+            <span class="text-muted-foreground">Length:</span>
+            <p class="font-medium" id="summary-length">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Width:</span>
+            <p class="font-medium" id="summary-width">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Height:</span>
+            <p class="font-medium" id="summary-height">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Weight:</span>
+            <p class="font-medium" id="summary-weight">-</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Initial state (no product entered) -->
+      <div id="no-product-state" class="text-center py-8 text-muted-foreground">
+        <p>Enter your product details to start calculating FBA profits</p>
+      </div>
+    </CardContent>
+    <CardFooter>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button id="product-dialog-trigger" class="w-full">Enter Product Details</Button>
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-[600px] max-h-[85vh]" animationDuration={200}>
+          <form id="product-form" method="dialog" class="flex flex-col gap-4">
+            <DialogHeader>
+              <DialogTitle>Product Information</DialogTitle>
+              <DialogDescription>
+                Enter your product details to calculate Amazon FBA fees and profitability.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div class="grid gap-6 py-4 px-1 max-h-[55vh] overflow-y-auto">
+              <!-- Basic Info -->
+              <div class="space-y-4">
+                <h4 class="text-sm font-medium">Basic Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="product-name">Product Name</Label>
+                    <Input id="product-name" name="name" placeholder="Enter product name" required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="category">Category</Label>
+                    <Select id="category" name="category">
+                      <SelectTrigger class="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent class="w-full min-w-[200px]">
+                        <SelectGroup>
+                          <SelectLabel>Product Categories</SelectLabel>
+                          <SelectItem value="electronics">Electronics</SelectItem>
+                          <SelectItem value="home-kitchen">Home & Kitchen</SelectItem>
+                          <SelectItem value="clothing">Clothing & Accessories</SelectItem>
+                          <SelectItem value="books">Books</SelectItem>
+                          <SelectItem value="toys-games">Toys & Games</SelectItem>
+                          <SelectItem value="sports">Sports & Outdoors</SelectItem>
+                          <SelectItem value="beauty">Beauty & Personal Care</SelectItem>
+                          <SelectSeparator />
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="selling-price">Selling Price ($)</Label>
+                    <Input type="number" id="selling-price" name="sellingPrice" placeholder="0" step="0.01" min="0" required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="cost-of-goods">Cost of Goods ($)</Label>
+                    <Input type="number" id="cost-of-goods" name="costOfGoods" placeholder="0" step="0.01" min="0" required />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dimensions -->
+              <div class="space-y-4">
+                <h4 class="text-sm font-medium">Product Dimensions</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div class="space-y-2">
+                    <Label for="length" id="length-label">Length (cm)</Label>
+                    <Input type="number" id="length" name="length" placeholder="0" step="0.1" min="0" required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="width" id="width-label">Width (cm)</Label>
+                    <Input type="number" id="width" name="width" placeholder="0" step="0.1" min="0" required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="height" id="height-label">Height (cm)</Label>
+                    <Input type="number" id="height" name="height" placeholder="0" step="0.1" min="0" required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="weight" id="weight-label">Weight (kg)</Label>
+                    <Input type="number" id="weight" name="weight" placeholder="0" step="0.001" min="0" required />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inventory Planning -->
+              <div class="space-y-4">
+                <h4 class="text-sm font-medium">Inventory Planning</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="average-units">Average Units in FBA</Label>
+                    <Input type="number" id="average-units" name="averageUnits" placeholder="100" value="100" min="1" />
+                    <p class="text-xs text-muted-foreground">How many units do you plan to keep in stock?</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="submit">Calculate Profit</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </CardFooter>
+  </Card>
+
+  <!-- Results Section (same as before) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Profit Analysis Card -->
+    <Card class="w-full">
+      <CardHeader>
+        <CardTitle>Profit Analysis</CardTitle>
+        <CardDescription>Real-time FBA calculations</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div id="results-container" class="space-y-4">
+          <div class="text-center py-8 text-muted-foreground">
+            <p>Enter product details to see profit analysis</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Success Criteria Card -->
+    <Card class="w-full">
+      <CardHeader>
+        <CardTitle>Success Criteria</CardTitle>
+        <CardDescription>FBA viability assessment</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div id="criteria-container" class="space-y-3">
+          <div class="text-center py-4 text-muted-foreground">
+            <p>Criteria will appear after calculation</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
+<script>
+  import { calculateAmazonFees, calculateProfitability, evaluateSuccessCriteria, calculateFBASizeTier, cmToInches, kgToPounds } from '../utils/fbaCalculations';
+  import type { ProductData } from '../types/calculator';
+  import type { SwitchChangeEvent } from "@/components/starwind/switch";
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('product-form') as HTMLFormElement;
+    const resultsContainer = document.getElementById('results-container')!;
+    const criteriaContainer = document.getElementById('criteria-container')!;
+    const unitToggle = document.getElementById('unit-toggle') as HTMLElement;
+    const unitDisplay = document.getElementById('unit-display') as HTMLSpanElement;
+    const triggerButton = document.getElementById('product-dialog-trigger') as HTMLButtonElement;
+    
+    // Summary elements
+    const productSummary = document.getElementById('product-summary')!;
+    const noProductState = document.getElementById('no-product-state')!;
+
+    // Unit labels
+    const lengthLabel = document.getElementById('length-label') as HTMLLabelElement;
+    const widthLabel = document.getElementById('width-label') as HTMLLabelElement;
+    const heightLabel = document.getElementById('height-label') as HTMLLabelElement;
+    const weightLabel = document.getElementById('weight-label') as HTMLLabelElement;
+
+    let isImperialUnits = false;
+    let currentProductData: ProductData | null = null;
+
+    // Update unit display and placeholders (same as before)
+    function updateUnitDisplay() {
+      if (isImperialUnits) {
+        unitDisplay.textContent = 'Currently: Imperial (inches/lbs)';
+        lengthLabel.textContent = 'Length (inches)';
+        widthLabel.textContent = 'Width (inches)';
+        heightLabel.textContent = 'Height (inches)';
+        weightLabel.textContent = 'Weight (lbs)';
+        
+        (document.getElementById('length') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('width') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('height') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('weight') as HTMLInputElement).placeholder = '0';
+      } else {
+        unitDisplay.textContent = 'Currently: Metric (cm/kg)';
+        lengthLabel.textContent = 'Length (cm)';
+        widthLabel.textContent = 'Width (cm)';
+        heightLabel.textContent = 'Height (cm)';
+        weightLabel.textContent = 'Weight (kg)';
+        
+        (document.getElementById('length') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('width') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('height') as HTMLInputElement).placeholder = '0';
+        (document.getElementById('weight') as HTMLInputElement).placeholder = '0';
+      }
+      
+      // Update summary if product exists
+      if (currentProductData) {
+        updateProductSummary(currentProductData);
+      }
+    }
+
+    // Initialize
+    isImperialUnits = false;
+    updateUnitDisplay();
+
+    // Unit toggle listener
+    unitToggle.addEventListener("starwind-switch:change", (e: Event) => {
+      const event = e as SwitchChangeEvent;
+      if (event.detail.switchId === "unit-toggle") {
+        isImperialUnits = event.detail.checked;
+        updateUnitDisplay();
+        if (currentProductData) {
+          calculateResults();
+        }
+      }
+    });
+
+    // Update product summary display
+    function updateProductSummary(productData: ProductData) {
+      const unitSuffix = isImperialUnits ? 
+        { length: '"', weight: ' lbs' } : 
+        { length: ' cm', weight: ' kg' };
+
+      // Map category values to display names
+      function getCategoryDisplayName(categoryValue: string): string {
+        const categoryMap: { [key: string]: string } = {
+          'electronics': 'Electronics',
+          'home-kitchen': 'Home & Kitchen',
+          'clothing': 'Clothing & Accessories',
+          'books': 'Books',
+          'toys-games': 'Toys & Games',
+          'sports': 'Sports & Outdoors',
+          'beauty': 'Beauty & Personal Care',
+          'other': 'Other'
+        };
+        return categoryMap[categoryValue] || categoryValue;
+      }
+
+      document.getElementById('summary-name')!.textContent = productData.name;
+      document.getElementById('summary-price')!.textContent = `$${productData.sellingPrice.toFixed(2)}`;
+      document.getElementById('summary-cost')!.textContent = `$${productData.costOfGoods.toFixed(2)}`;
+      document.getElementById('summary-category')!.textContent = getCategoryDisplayName(productData.category);
+      
+      document.getElementById('summary-length')!.textContent = `${productData.dimensions.length}${unitSuffix.length}`;
+      document.getElementById('summary-width')!.textContent = `${productData.dimensions.width}${unitSuffix.length}`;
+      document.getElementById('summary-height')!.textContent = `${productData.dimensions.height}${unitSuffix.length}`;
+      document.getElementById('summary-weight')!.textContent = `${productData.dimensions.weight}${unitSuffix.weight}`;
+
+      // Show summary, hide no-product state
+      productSummary.classList.remove('hidden');
+      noProductState.classList.add('hidden');
+      triggerButton.textContent = 'Edit Product Details';
+    }
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const productData: ProductData = {
+        name: formData.get('name') as string,
+        sellingPrice: parseFloat(formData.get('sellingPrice') as string),
+        costOfGoods: parseFloat(formData.get('costOfGoods') as string),
+        category: formData.get('category') as string,
+        dimensions: {
+          length: parseFloat(formData.get('length') as string),
+          width: parseFloat(formData.get('width') as string),
+          height: parseFloat(formData.get('height') as string),
+          weight: parseFloat(formData.get('weight') as string)
+        }
+      };
+
+      // Validation
+      if (!productData.name || !productData.category || 
+          isNaN(productData.sellingPrice) || isNaN(productData.costOfGoods) ||
+          isNaN(productData.dimensions.length) || isNaN(productData.dimensions.width) ||
+          isNaN(productData.dimensions.height) || isNaN(productData.dimensions.weight)) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      currentProductData = productData;
+      updateProductSummary(productData);
+      calculateResults();
+    });
+
+    // Same calculation functions as before...
+    function formatCurrency(amount: number): string {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    }
+
+    function formatSmallCurrency(amount: number): string {
+      if (amount > 0 && amount < 0.01) {
+        return `$${amount.toFixed(4)}`;
+      }
+      return formatCurrency(amount);
+    }
+
+    function calculateResults() {
+      if (!currentProductData) return;
+
+      const averageUnitsElement = document.getElementById('average-units') as HTMLInputElement;
+      const averageUnits = averageUnitsElement ? parseInt(averageUnitsElement.value) || 100 : 100;
+      
+      const useMetric = !isImperialUnits;
+      const fees = calculateAmazonFees(currentProductData, useMetric, { averageUnitsStored: averageUnits });
+      const profitability = calculateProfitability(currentProductData, fees);
+      const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
+      const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
+
+      // Show the OTHER unit system for reference
+      const debugInfo = useMetric ? `
+        <div class="text-xs text-muted-foreground mb-2">
+          <span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)
+        </div>
+      ` : `
+        <div class="text-xs text-muted-foreground mb-2">
+          <span class="font-medium">Metric equivalent:</span> ${(currentProductData.dimensions.length * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.width * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.height * 2.54).toFixed(1)}cm (${(currentProductData.dimensions.weight * 0.453592).toFixed(3)}kg)
+        </div>
+      `;
+
+      // Render profit analysis
+      resultsContainer.innerHTML = `
+        <div class="space-y-4">
+          ${debugInfo}
+          <div class="border-b pb-3">
+            <h4 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Size Tier</h4>
+            <p class="text-lg font-semibold">${sizeTier.replace('_', ' ')}</p>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Net Profit</h4>
+              <p class="text-lg font-semibold ${profitability.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}">
+                ${formatCurrency(profitability.netProfit)}
+              </p>
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Profit Margin</h4>
+              <p class="text-lg font-semibold ${profitability.profitMargin >= 15 ? 'text-green-600' : 'text-yellow-600'}">
+                ${profitability.profitMargin.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">ROI</h4>
+              <p class="text-lg font-semibold">${profitability.returnOnInvestment.toFixed(1)}%</p>
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Markup</h4>
+              <p class="text-lg font-semibold">${profitability.markup.toFixed(1)}%</p>
+            </div>
+          </div>
+
+          <div class="border-t pt-3">
+            <h4 class="font-medium text-sm text-muted-foreground mb-2">Fee Breakdown</h4>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between">
+                <span>Referral Fee:</span>
+                <span>${formatCurrency(fees.referralFee)}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Fulfillment Fee:</span>
+                <span>${formatCurrency(fees.fulfillmentFee)}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Storage Fee (per unit/month):</span>
+                <span>${formatSmallCurrency(fees.storageMonthlyFee)}</span>
+              </div>
+              <div class="flex justify-between text-xs text-muted-foreground">
+                <span>Total for ${averageUnits} units:</span>
+                <span>${formatCurrency(fees.storageMonthlyFee * averageUnits)}</span>
+              </div>
+              <div class="flex justify-between font-semibold border-t pt-1">
+                <span>Total Fees:</span>
+                <span>${formatCurrency(profitability.totalFees)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t pt-3">
+            <h4 class="font-medium text-sm text-muted-foreground">Break-even Price</h4>
+            <p class="text-lg font-semibold">${formatCurrency(profitability.breakEvenPrice)}</p>
+          </div>
+        </div>
+      `;
+
+      // Render success criteria
+      const passedCount = criteria.filter(c => c.passed).length;
+      
+      // Debug: let's see what's actually happening
+      console.log('Criteria results:', criteria);
+      console.log('Passed count:', passedCount);
+      
+      // Define color schemes based on criteria passed
+      let colorScheme;
+      if (passedCount === 4) {
+        colorScheme = {
+          bg: 'bg-green-50',
+          text: 'text-green-700',
+          border: 'border-green-500'
+        };
+      } else if (passedCount === 3) {
+        colorScheme = {
+          bg: 'bg-blue-50',
+          text: 'text-blue-700',
+          border: 'border-blue-500'
+        };
+      } else if (passedCount === 2) {
+        colorScheme = {
+          bg: 'bg-yellow-50',
+          text: 'text-yellow-700',
+          border: 'border-yellow-500'
+        };
+      } else if (passedCount === 1) {
+        colorScheme = {
+          bg: 'bg-orange-50',
+          text: 'text-orange-700',
+          border: 'border-orange-500'
+        };
+      } else {
+        colorScheme = {
+          bg: 'bg-red-50',
+          text: 'text-red-700',
+          border: 'border-red-500'
+        };
+      }
+
+      criteriaContainer.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-center p-4 rounded-lg border-2 ${colorScheme.bg} ${colorScheme.text} ${colorScheme.border}">
+            <p class="text-lg font-semibold">${passedCount}/4 Criteria Met</p>
+            <p class="text-sm">${
+              passedCount === 4 ? 'Perfect FBA candidate!' : 
+              passedCount === 3 ? 'Excellent FBA candidate!' : 
+              passedCount === 2 ? 'Good potential' : 
+              passedCount === 1 ? 'Needs improvement' : 
+              'Not recommended for FBA'
+            }</p>
+          </div>
+          
+          ${criteria.map(criterion => `
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                ${criterion.passed 
+                  ? '<div class="w-3 h-3 bg-green-500 rounded-full"></div>' 
+                  : '<div class="w-3 h-3 bg-red-500 rounded-full"></div>'
+                }
+              </div>
+              <div class="flex-1">
+                <p class="text-base font-semibold">${criterion.label}</p>
+                <p class="text-sm text-muted-foreground mt-1">${criterion.value} (${criterion.threshold})</p>
+                <p class="text-sm text-muted-foreground">${criterion.message}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+  });
+</script>

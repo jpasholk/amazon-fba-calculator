@@ -9,6 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.12.8"
+    "@tabler/icons": "^3.34.1",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/vite": "^4.1.11",
+    "astro": "^5.12.8",
+    "tailwind-variants": "^2.1.0",
+    "tailwindcss": "^4.1.11",
+    "tw-animate-css": "^1.3.6"
   }
 }
