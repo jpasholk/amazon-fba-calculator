@@ -21,22 +21,9 @@ import {
   <!-- Product Info Card with Dialog -->
   <Card class="w-full">
     <CardHeader>
-      <div class="flex justify-between items-start">
-        <div>
-          <CardTitle>Amazon FBA Calculator 2025</CardTitle>
-          <CardDescription>Calculate profit margins and fees for your Amazon FBA products</CardDescription>
-        </div>
-        <div class="flex flex-col items-end gap-1">
-          <div class="flex items-center gap-2">
-            <Label for="unit-toggle" class="text-sm font-medium">
-              Use Imperial Units
-            </Label>
-            <Switch id="unit-toggle" />
-          </div>
-          <span id="unit-display" class="text-xs text-muted-foreground">
-            Currently: Metric (cm/kg)
-          </span>
-        </div>
+      <div>
+        <CardTitle>Amazon FBA Calculator 2025</CardTitle>
+        <CardDescription>Calculate profit margins and fees for your Amazon FBA products</CardDescription>
       </div>
     </CardHeader>
     <CardContent>
@@ -145,7 +132,18 @@ import {
 
               <!-- Dimensions -->
               <div class="space-y-4">
-                <h4 class="text-sm font-medium">Product Dimensions</h4>
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-medium">Product Dimensions</h4>
+                  <div class="flex items-center gap-2">
+                    <Label for="unit-toggle" class="text-xs font-medium">
+                      Imperial Units
+                    </Label>
+                    <Switch id="unit-toggle" />
+                  </div>
+                </div>
+                <div id="unit-display" class="text-xs text-muted-foreground mb-2">
+                  Currently: Metric (cm/kg)
+                </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="space-y-2">
                     <Label for="length" id="length-label">Length (cm)</Label>
