@@ -133,23 +133,23 @@ import { Label } from "@/components/starwind/label";
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <Label for="selling-price">Selling Price ($)</Label>
-                    <Input type="number" id="selling-price" name="sellingPrice" placeholder="0" step="0.01" min="0" required />
+                    <Input type="number" id="selling-price" name="sellingPrice" placeholder="0" step="0.01" min="0" inputmode="decimal" required />
                   </div>
                   <div class="space-y-2">
                     <Label for="cost-of-goods">Product Cost ($)</Label>
-                    <Input type="number" id="cost-of-goods" name="costOfGoods" placeholder="0" step="0.01" min="0" required />
+                    <Input type="number" id="cost-of-goods" name="costOfGoods" placeholder="0" step="0.01" min="0" inputmode="decimal" required />
                     <p class="text-xs text-muted-foreground">Cost to manufacture/purchase the product</p>
                   </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <Label for="unit-shipping-cost">Unit Shipping Cost ($)</Label>
-                    <Input type="number" id="unit-shipping-cost" name="unitShippingCost" placeholder="0" step="0.01" min="0" />
+                    <Input type="number" id="unit-shipping-cost" name="unitShippingCost" placeholder="0" step="0.01" min="0" inputmode="decimal" />
                     <p class="text-xs text-muted-foreground">Per-unit cost to ship from manufacturer</p>
                   </div>
                   <div class="space-y-2">
                     <Label for="fba-shipping-cost">FBA Shipping Cost ($)</Label>
-                    <Input type="number" id="fba-shipping-cost" name="fbaShippingCost" placeholder="0" step="0.01" min="0" />
+                    <Input type="number" id="fba-shipping-cost" name="fbaShippingCost" placeholder="0" step="0.01" min="0" inputmode="decimal" />
                     <p class="text-xs text-muted-foreground">Total cost to ship batch to Amazon warehouse</p>
                   </div>
                 </div>
@@ -172,19 +172,19 @@ import { Label } from "@/components/starwind/label";
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div class="space-y-2">
                     <Label for="length" id="length-label">Length (cm)</Label>
-                    <Input type="number" id="length" name="length" placeholder="0" step="0.1" min="0" required />
+                    <Input type="number" id="length" name="length" placeholder="0" step="0.1" min="0" inputmode="decimal" required />
                   </div>
                   <div class="space-y-2">
                     <Label for="width" id="width-label">Width (cm)</Label>
-                    <Input type="number" id="width" name="width" placeholder="0" step="0.1" min="0" required />
+                    <Input type="number" id="width" name="width" placeholder="0" step="0.1" min="0" inputmode="decimal" required />
                   </div>
                   <div class="space-y-2">
                     <Label for="height" id="height-label">Height (cm)</Label>
-                    <Input type="number" id="height" name="height" placeholder="0" step="0.1" min="0" required />
+                    <Input type="number" id="height" name="height" placeholder="0" step="0.1" min="0" inputmode="decimal" required />
                   </div>
                   <div class="space-y-2">
                     <Label for="weight" id="weight-label">Weight (kg)</Label>
-                    <Input type="number" id="weight" name="weight" placeholder="0" step="0.001" min="0" required />
+                    <Input type="number" id="weight" name="weight" placeholder="0" step="0.001" min="0" inputmode="decimal" required />
                   </div>
                 </div>
               </div>
@@ -195,7 +195,7 @@ import { Label } from "@/components/starwind/label";
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <Label for="average-units">Average Units in FBA</Label>
-                    <Input type="number" id="average-units" name="averageUnits" placeholder="100" value="100" min="1" />
+                    <Input type="number" id="average-units" name="averageUnits" placeholder="100" value="100" min="1" inputmode="numeric" />
                     <p class="text-xs text-muted-foreground">How many units do you plan to keep in stock?</p>
                   </div>
                 </div>
