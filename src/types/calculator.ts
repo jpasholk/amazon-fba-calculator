@@ -9,11 +9,15 @@ export interface ProductData {
   name: string;
   sellingPrice: number;
   costOfGoods: number;
+  unitShippingCost?: number;
+  fbaShippingCost?: number;
   category: string;
-  dimensions: ProductDimensions;
-  isOversized?: boolean;
-  isDangerous?: boolean;
-  isMedia?: boolean;
+  dimensions: {
+    length: number;
+    width: number;
+    height: number;
+    weight: number;
+  };
 }
 
 export interface AmazonFees {
@@ -21,15 +25,15 @@ export interface AmazonFees {
   fulfillmentFee: number;
   closingFee: number;
   storageMonthlyFee: number;
-  totalStorageFee?: number; // Add this optional property
+  totalStorageFee?: number;
 }
 
 export interface ProfitAnalysis {
   grossProfit: number;
   netProfit: number;
-  profitMargin: number; // as percentage
-  returnOnInvestment: number; // as percentage
-  markup: number; // as percentage
+  profitMargin: number;
+  returnOnInvestment: number;
+  markup: number;
   totalFees: number;
   totalCosts: number;
   breakEvenPrice: number;

@@ -1,20 +1,11 @@
 ---
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/starwind/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator } from "@/components/starwind/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/starwind/card";
 import { Button } from "@/components/starwind/button";
+import { Switch } from "@/components/starwind/switch";
 import { Input } from "@/components/starwind/input";
 import { Label } from "@/components/starwind/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectSeparator } from "@/components/starwind/select";
-import { Switch } from "@/components/starwind/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/starwind/dialog";
 ---
 
 <div class="max-w-4xl mx-auto space-y-6">
@@ -22,32 +13,47 @@ import {
   <Card class="w-full">
     <CardHeader>
       <div>
-        <CardTitle>Amazon FBA Calculator 2025</CardTitle>
+        <CardTitle>Amazon FBA Calculator</CardTitle>
         <CardDescription>Calculate profit margins and fees for your Amazon FBA products</CardDescription>
       </div>
     </CardHeader>
     <CardContent>
       <!-- Product Summary (shown after entry) -->
       <div id="product-summary" class="hidden space-y-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span class="text-muted-foreground">Product:</span>
-            <p class="font-medium" id="summary-name">-</p>
+        <!-- Product Name and Price Row -->
+        <div class="grid grid-cols-4 gap-4">
+          <div class="col-span-3">
+            <h2 class="text-xl font-bold" id="summary-name">-</h2>
+            <p class="text-sm text-muted-foreground" id="summary-category">-</p>
           </div>
-          <div>
-            <span class="text-muted-foreground">Selling Price:</span>
-            <p class="font-medium" id="summary-price">-</p>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-green-600 dark:text-green-400" id="summary-price">-</p>
+            <p class="text-xs text-muted-foreground">Selling Price</p>
           </div>
+        </div>
+
+        <!-- Cost Breakdown Row -->
+        <div class="grid grid-cols-4 gap-4 text-sm border-t pt-4">
           <div>
-            <span class="text-muted-foreground">Cost:</span>
+            <span class="text-muted-foreground">Product Cost:</span>
             <p class="font-medium" id="summary-cost">-</p>
           </div>
           <div>
-            <span class="text-muted-foreground">Category:</span>
-            <p class="font-medium" id="summary-category">-</p>
+            <span class="text-muted-foreground">Mfg Shipping:</span>
+            <p class="font-medium" id="summary-unit-shipping">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">FBA Inbound:</span>
+            <p class="font-medium" id="summary-fba-shipping">-</p>
+          </div>
+          <div>
+            <span class="text-muted-foreground">Total Cost:</span>
+            <p class="font-semibold" id="summary-total-cost">-</p>
           </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm border-t pt-4">
+
+        <!-- Dimensions Row -->
+        <div class="grid grid-cols-4 gap-4 text-sm">
           <div>
             <span class="text-muted-foreground">Length:</span>
             <p class="font-medium" id="summary-length">-</p>
@@ -67,6 +73,11 @@ import {
         </div>
       </div>
 
+      <!-- Debug Info (shown after calculation) -->
+      <div id="debug-info" class="hidden text-xs text-muted-foreground py-2">
+        <!-- Debug content will be inserted here -->
+      </div>
+
       <!-- Initial state (no product entered) -->
       <div id="no-product-state" class="text-center py-8 text-muted-foreground">
         <p>Enter your product details to start calculating FBA profits</p>
@@ -77,7 +88,7 @@ import {
         <DialogTrigger asChild>
           <Button id="product-dialog-trigger" class="w-full">Enter Product Details</Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-[600px] max-h-[85vh]" animationDuration={200}>
+        <DialogContent class="sm:max-w-[600px] max-h-[90vh]" animationDuration={200}>
           <form id="product-form" method="dialog" class="flex flex-col gap-4">
             <DialogHeader>
               <DialogTitle>Product Information</DialogTitle>
@@ -86,7 +97,7 @@ import {
               </DialogDescription>
             </DialogHeader>
             
-            <div class="grid gap-6 py-4 px-1 max-h-[55vh] overflow-y-auto">
+            <div class="grid gap-6 py-4 px-1">
               <!-- Basic Info -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">Basic Information</h4>
@@ -124,8 +135,21 @@ import {
                     <Input type="number" id="selling-price" name="sellingPrice" placeholder="0" step="0.01" min="0" required />
                   </div>
                   <div class="space-y-2">
-                    <Label for="cost-of-goods">Cost of Goods ($)</Label>
+                    <Label for="cost-of-goods">Product Cost ($)</Label>
                     <Input type="number" id="cost-of-goods" name="costOfGoods" placeholder="0" step="0.01" min="0" required />
+                    <p class="text-xs text-muted-foreground">Cost to manufacture/purchase the product</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="unit-shipping-cost">Unit Shipping Cost ($)</Label>
+                    <Input type="number" id="unit-shipping-cost" name="unitShippingCost" placeholder="0" step="0.01" min="0" />
+                    <p class="text-xs text-muted-foreground">Per-unit cost to ship from manufacturer</p>
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="fba-shipping-cost">FBA Shipping Cost ($)</Label>
+                    <Input type="number" id="fba-shipping-cost" name="fbaShippingCost" placeholder="0" step="0.01" min="0" />
+                    <p class="text-xs text-muted-foreground">Total cost to ship batch to Amazon warehouse</p>
                   </div>
                 </div>
               </div>
@@ -189,13 +213,13 @@ import {
     </CardFooter>
   </Card>
 
-  <!-- Results Section (same as before) -->
+  <!-- Results Section -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Profit Analysis Card -->
     <Card class="w-full">
       <CardHeader>
         <CardTitle>Profit Analysis</CardTitle>
-        <CardDescription>Real-time FBA calculations</CardDescription>
+        <CardDescription>Comprehensive FBA calculations</CardDescription>
       </CardHeader>
       <CardContent>
         <div id="results-container" class="space-y-4">
@@ -249,7 +273,6 @@ import {
     let isImperialUnits = false;
     let currentProductData: ProductData | null = null;
 
-    // Update unit display and placeholders (same as before)
     function updateUnitDisplay() {
       if (isImperialUnits) {
         unitDisplay.textContent = 'Currently: Imperial (inches/lbs)';
@@ -275,7 +298,6 @@ import {
         (document.getElementById('weight') as HTMLInputElement).placeholder = '0';
       }
       
-      // Update summary if product exists
       if (currentProductData) {
         updateProductSummary(currentProductData);
       }
@@ -318,10 +340,15 @@ import {
         return categoryMap[categoryValue] || categoryValue;
       }
 
+      const totalCost = productData.costOfGoods + (productData.unitShippingCost || 0) + (productData.fbaShippingCost || 0);
+
       document.getElementById('summary-name')!.textContent = productData.name;
       document.getElementById('summary-price')!.textContent = `$${productData.sellingPrice.toFixed(2)}`;
       document.getElementById('summary-cost')!.textContent = `$${productData.costOfGoods.toFixed(2)}`;
+      document.getElementById('summary-unit-shipping')!.textContent = `$${(productData.unitShippingCost || 0).toFixed(2)}`;
+      document.getElementById('summary-fba-shipping')!.textContent = `$${(productData.fbaShippingCost || 0).toFixed(2)}`;
       document.getElementById('summary-category')!.textContent = getCategoryDisplayName(productData.category);
+      document.getElementById('summary-total-cost')!.textContent = `$${totalCost.toFixed(2)}`;
       
       document.getElementById('summary-length')!.textContent = `${productData.dimensions.length}${unitSuffix.length}`;
       document.getElementById('summary-width')!.textContent = `${productData.dimensions.width}${unitSuffix.length}`;
@@ -343,6 +370,8 @@ import {
         name: formData.get('name') as string,
         sellingPrice: parseFloat(formData.get('sellingPrice') as string),
         costOfGoods: parseFloat(formData.get('costOfGoods') as string),
+        unitShippingCost: parseFloat(formData.get('unitShippingCost') as string) || 0,
+        fbaShippingCost: parseFloat(formData.get('fbaShippingCost') as string) || 0,
         category: formData.get('category') as string,
         dimensions: {
           length: parseFloat(formData.get('length') as string),
@@ -366,7 +395,6 @@ import {
       calculateResults();
     });
 
-    // Same calculation functions as before...
     function formatCurrency(amount: number): string {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -393,53 +421,31 @@ import {
       const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
       const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
 
-      // Show the OTHER unit system for reference - ADD dark classes here
-      const debugInfo = useMetric ? `
-        <div class="text-xs text-muted-foreground mb-2">
-          <span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)
-        </div>
-      ` : `
-        <div class="text-xs text-muted-foreground mb-2">
-          <span class="font-medium">Metric equivalent:</span> ${(currentProductData.dimensions.length * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.width * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.height * 2.54).toFixed(1)}cm (${(currentProductData.dimensions.weight * 0.453592).toFixed(3)}kg)
-        </div>
-      `;
+      // Calculate ad spend
+      const adSpend = Math.floor(currentProductData.sellingPrice * 0.20 * 100) / 100;
+      
+      // Calculate break-even price including ad spend
+      const breakEvenWithAds = profitability.breakEvenPrice + adSpend;
 
-      // Render profit analysis - UPDATE this section with proper semantic classes
+      // Show the OTHER unit system for reference
+      const debugContent = useMetric ? 
+        `<span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)` :
+        `<span class="font-medium">Metric equivalent:</span> ${(currentProductData.dimensions.length * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.width * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.height * 2.54).toFixed(1)}cm (${(currentProductData.dimensions.weight * 0.453592).toFixed(3)}kg)`;
+
+      // Update debug info in the top card
+      const debugInfoElement = document.getElementById('debug-info')!;
+      debugInfoElement.innerHTML = debugContent;
+      debugInfoElement.classList.remove('hidden');
+
+      // Render profit analysis without debug info
       resultsContainer.innerHTML = `
         <div class="space-y-4">
-          ${debugInfo}
           <div class="border-b border-border pb-3">
             <h4 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Size Tier</h4>
             <p class="text-lg font-semibold">${sizeTier.replace('_', ' ')}</p>
           </div>
-          
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <h4 class="font-medium text-sm text-muted-foreground">Net Profit</h4>
-              <p class="text-lg font-semibold ${profitability.netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
-                ${formatCurrency(profitability.netProfit)}
-              </p>
-            </div>
-            <div>
-              <h4 class="font-medium text-sm text-muted-foreground">Profit Margin</h4>
-              <p class="text-lg font-semibold ${profitability.profitMargin >= 15 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
-                ${profitability.profitMargin.toFixed(1)}%
-              </p>
-            </div>
-          </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <h4 class="font-medium text-sm text-muted-foreground">ROI</h4>
-              <p class="text-lg font-semibold">${profitability.returnOnInvestment.toFixed(1)}%</p>
-            </div>
-            <div>
-              <h4 class="font-medium text-sm text-muted-foreground">Markup</h4>
-              <p class="text-lg font-semibold">${profitability.markup.toFixed(1)}%</p>
-            </div>
-          </div>
-
-          <div class="border-t border-border pt-3">
+          <div class="pt-3">
             <h4 class="font-medium text-sm text-muted-foreground mb-2">Fee Breakdown</h4>
             <div class="space-y-1 text-sm">
               <div class="flex justify-between">
@@ -458,20 +464,60 @@ import {
                 <span>Total for ${averageUnits} units:</span>
                 <span>${formatCurrency(fees.storageMonthlyFee * averageUnits)}</span>
               </div>
-              <div class="flex justify-between font-semibold border-t border-border pt-1">
-                <span>Total Fees:</span>
-                <span>${formatCurrency(profitability.totalFees)}</span>
+              <div class="flex justify-between">
+                <span>Ad Spend (20%):</span>
+                <span>${formatCurrency(adSpend)}</span>
               </div>
+              <div class="flex justify-between font-semibold border-t border-border pt-1">
+                <span>Total Fees + Ads:</span>
+                <span>${formatCurrency(profitability.totalFees + adSpend)}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-3 border-t border-border pt-3">
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Net Profit (After Ads)</h4>
+              <p class="text-lg font-semibold ${(profitability.netProfit - adSpend) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                ${formatCurrency(profitability.netProfit - adSpend)}
+              </p>
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Profit Margin (After Ads)</h4>
+              <p class="text-lg font-semibold ${((profitability.netProfit - adSpend) / currentProductData.sellingPrice * 100) >= 15 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
+                ${(((profitability.netProfit - adSpend) / currentProductData.sellingPrice) * 100).toFixed(1)}%
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">ROI (After Ads)</h4>
+              <p class="text-lg font-semibold">${(((profitability.netProfit - adSpend) / profitability.totalCosts) * 100).toFixed(1)}%</p>
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-muted-foreground">Markup (After Ads)</h4>
+              <p class="text-lg font-semibold">${(((profitability.netProfit - adSpend) / profitability.totalCosts) * 100).toFixed(1)}%</p>
             </div>
           </div>
 
           <div class="border-t border-border pt-3">
-            <h4 class="font-medium text-sm text-muted-foreground">Break-even Price</h4>
-            <p class="text-lg font-semibold">${formatCurrency(profitability.breakEvenPrice)}</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <h4 class="font-medium text-sm text-muted-foreground">Break-even Price</h4>
+                <p class="text-lg font-semibold">${formatCurrency(profitability.breakEvenPrice)}</p>
+                <p class="text-xs text-muted-foreground">Before ads</p>
+              </div>
+              <div>
+                <h4 class="font-medium text-sm text-muted-foreground">Break-even + Ads</h4>
+                <p class="text-lg font-semibold">${formatCurrency(breakEvenWithAds)}</p>
+                <p class="text-xs text-muted-foreground">Including 20% ad spend</p>
+              </div>
+            </div>
           </div>
         </div>
       `;
-
+      
       // Render success criteria with dark mode support
       const passedCount = criteria.filter(c => c.passed).length;
       
