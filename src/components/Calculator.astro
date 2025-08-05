@@ -28,7 +28,7 @@ import { Label } from "@/components/starwind/label";
             <h2 class="text-xl font-bold" id="summary-name">-</h2>
             <p class="text-sm text-muted-foreground" id="summary-category">-</p>
           </div>
-          <div class="text-right">
+          <div>
             <p class="text-2xl font-bold text-green-600 dark:text-green-400" id="summary-price">-</p>
             <p class="text-xs text-muted-foreground">Selling Price</p>
           </div>
@@ -640,7 +640,7 @@ import { Label } from "@/components/starwind/label";
         </div>
       `;
 
-      // Render ROI Timeline with embedded sliders
+      // Render ROI Timeline with embedded slider
       timelineContainer.innerHTML = `
         <div class="space-y-4">
           <!-- Sales Velocity Slider -->
@@ -654,17 +654,6 @@ import { Label } from "@/components/starwind/label";
             </div>
           </div>
 
-          <!-- Units Ordered Slider -->
-          <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
-            <label for="timeline-units-ordered" class="block text-sm font-medium">Initial Order Quantity</label>
-            <input type="range" id="timeline-units-ordered" min="100" max="5000" value="${initialOrderQty}" step="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
-            <div class="flex justify-between text-xs text-muted-foreground">
-              <span>100</span>
-              <span id="timeline-units-display" class="font-medium">${initialOrderQty} units</span>
-              <span>5000</span>
-            </div>
-          </div>
-
           <!-- Break-even Alert -->
           <div id="breakeven-alert" class="text-center p-4 rounded-lg border ${breakEvenDays <= 90 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : breakEvenDays <= 180 ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'}">
             <div id="breakeven-days" class="text-2xl font-bold ${breakEvenDays <= 90 ? 'text-green-700 dark:text-green-300' : breakEvenDays <= 180 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}">${breakEvenDays} days</div>
@@ -672,12 +661,12 @@ import { Label } from "@/components/starwind/label";
           </div>
           
           <div class="space-y-3">
-            <div id="initial-investment-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+            <div class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
               <div>
                 <p class="font-medium">Initial Investment</p>
-                <p id="investment-detail" class="text-sm text-muted-foreground">${initialOrderQty} units @ ${formatCurrency(totalUnitCost)}</p>
+                <p class="text-sm text-muted-foreground">${initialOrderQty} units @ ${formatCurrency(totalUnitCost)}</p>
               </div>
-              <p id="investment-amount" class="font-semibold">${formatCurrency(initialInvestment)}</p>
+              <p class="font-semibold">${formatCurrency(initialInvestment)}</p>
             </div>
             
             <div id="monthly-profit-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
@@ -730,11 +719,6 @@ import { Label } from "@/components/starwind/label";
 
       // Calculate sweet spot for 90-day break-even
       function calculateSweetSpot(targetDays: number, monthlySales: number, monthlyProfitPerUnit: number, unitCost: number, fbaShippingPerUnit: number) {
-        // For break-even in targetDays: initialInvestment = monthlyProfit * (targetDays / 30)
-        // initialInvestment = orderQty * unitCost
-        // monthlyProfit = monthlySales * monthlyProfitPerUnit
-        // So: orderQty = (monthlySales * monthlyProfitPerUnit * targetDays / 30) / unitCost
-        
         const targetMonthlyProfit = monthlySales * monthlyProfitPerUnit;
         const targetInvestment = targetMonthlyProfit * (targetDays / 30);
         const sweetSpotQty = Math.round(targetInvestment / unitCost);
@@ -755,100 +739,86 @@ import { Label } from "@/components/starwind/label";
         sweetSpotText.textContent = 'Product needs positive profit margin for sweet spot calculation';
       }
 
-      // Add event listeners for both sliders
+      // Add event listener for the sales slider only
       const timelineSlider = document.getElementById('timeline-monthly-sales') as HTMLInputElement;
       const timelineSalesDisplay = document.getElementById('timeline-sales-display') as HTMLElement;
-      const unitsSlider = document.getElementById('timeline-units-ordered') as HTMLInputElement;
-      const unitsDisplay = document.getElementById('timeline-units-display') as HTMLElement;
       
-      function updateCalculations() {
-        const currentMonthlySales = parseInt(timelineSlider.value);
-        const currentOrderQty = parseInt(unitsSlider.value);
-        
-        // Recalculate all values
-        const currentInitialInvestment = currentOrderQty * unitCost;
-        const currentMonthlyProfit = currentMonthlySales * monthlyProfitPerUnit;
-        const currentBreakEvenMonths = currentInitialInvestment / currentMonthlyProfit;
-        const currentBreakEvenDays = Math.ceil(currentBreakEvenMonths * 30);
-        const currentInventoryRunwayMonths = currentOrderQty / currentMonthlySales;
-        const currentInventoryRunwayDays = Math.ceil(currentInventoryRunwayMonths * 30);
-        
-        // Update displays
-        timelineSalesDisplay.textContent = `${currentMonthlySales} units/month`;
-        unitsDisplay.textContent = `${currentOrderQty} units`;
-        
-        // Update break-even alert
-        const breakEvenAlert = document.getElementById('breakeven-alert')!;
-        const breakEvenDaysElement = document.getElementById('breakeven-days')!;
-        
-        const isGood = currentBreakEvenDays <= 90;
-        const isOkay = currentBreakEvenDays <= 180;
-        
-        breakEvenAlert.className = `text-center p-4 rounded-lg border ${
-          isGood ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 
-          isOkay ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 
-          'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
-        }`;
-        
-        breakEvenDaysElement.className = `text-2xl font-bold ${
-          isGood ? 'text-green-700 dark:text-green-300' : 
-          isOkay ? 'text-yellow-700 dark:text-yellow-300' : 
-          'text-red-700 dark:text-red-300'
-        }`;
-        
-        breakEvenDaysElement.textContent = `${currentBreakEvenDays} days`;
-        
-        // Update investment card
-        document.getElementById('investment-detail')!.textContent = `${currentOrderQty} units @ ${formatCurrency(totalUnitCost)}`;
-        document.getElementById('investment-amount')!.textContent = formatCurrency(currentInitialInvestment);
-        
-        // Update monthly profit
-        document.getElementById('monthly-profit-detail')!.textContent = `${currentMonthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}`;
-        const monthlyProfitAmount = document.getElementById('monthly-profit-amount')!;
-        monthlyProfitAmount.textContent = formatCurrency(currentMonthlyProfit);
-        monthlyProfitAmount.className = `font-semibold ${currentMonthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
-        
-        // Update inventory runway
-        document.getElementById('inventory-runway-days')!.textContent = `${currentInventoryRunwayDays} days`;
-        
-        // Update sweet spot
-        const currentSweetSpot = calculateSweetSpot(90, currentMonthlySales, monthlyProfitPerUnit, unitCost, fbaShippingPerUnit);
-        const sweetSpotTextElement = document.getElementById('sweet-spot-text')!;
-        
-        if (monthlyProfitPerUnit > 0) {
-          sweetSpotTextElement.textContent = `Order ${currentSweetSpot.quantity} units (${formatCurrency(currentSweetSpot.investment)}) for 90-day break-even with ${currentSweetSpot.runwayDays}-day inventory runway`;
-        } else {
-          sweetSpotTextElement.textContent = 'Product needs positive profit margin for sweet spot calculation';
-        }
-        
-        // Update warning visibility
-        const reorderWarning = document.getElementById('reorder-warning')!;
-        if (currentInventoryRunwayDays < currentBreakEvenDays) {
-          reorderWarning.classList.remove('hidden');
-        } else {
-          reorderWarning.classList.add('hidden');
-        }
-        
-        // Update milestones
-        document.getElementById('milestones')!.innerHTML = `
-          <div class="flex justify-between">
-            <span>50% ROI:</span>
-            <span>${Math.ceil(currentBreakEvenDays / 2)} days</span>
-          </div>
-          <div class="flex justify-between">
-            <span>100% ROI:</span>
-            <span>${currentBreakEvenDays} days</span>
-          </div>
-          <div class="flex justify-between">
-            <span>200% ROI:</span>
-            <span>${currentBreakEvenDays * 2} days</span>
-          </div>
-        `;
-      }
-
-      if (timelineSlider && unitsSlider) {
-        timelineSlider.addEventListener('input', updateCalculations);
-        unitsSlider.addEventListener('input', updateCalculations);
+      if (timelineSlider && timelineSalesDisplay) {
+        timelineSlider.addEventListener('input', function() {
+          const newMonthlySales = parseInt(this.value);
+          timelineSalesDisplay.textContent = `${newMonthlySales} units/month`;
+          
+          // Recalculate timeline values (initial order qty stays the same)
+          const newMonthlyProfit = newMonthlySales * monthlyProfitPerUnit;
+          const newBreakEvenMonths = initialInvestment / newMonthlyProfit;
+          const newBreakEvenDays = Math.ceil(newBreakEvenMonths * 30);
+          const newInventoryRunwayMonths = initialOrderQty / newMonthlySales;
+          const newInventoryRunwayDays = Math.ceil(newInventoryRunwayMonths * 30);
+          
+          // Update break-even alert
+          const breakEvenAlert = document.getElementById('breakeven-alert')!;
+          const breakEvenDaysElement = document.getElementById('breakeven-days')!;
+          
+          const isGood = newBreakEvenDays <= 90;
+          const isOkay = newBreakEvenDays <= 180;
+          
+          breakEvenAlert.className = `text-center p-4 rounded-lg border ${
+            isGood ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 
+            isOkay ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 
+            'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+          }`;
+          
+          breakEvenDaysElement.className = `text-2xl font-bold ${
+            isGood ? 'text-green-700 dark:text-green-300' : 
+            isOkay ? 'text-yellow-700 dark:text-yellow-300' : 
+            'text-red-700 dark:text-red-300'
+          }`;
+          
+          breakEvenDaysElement.textContent = `${newBreakEvenDays} days`;
+          
+          // Update monthly profit
+          document.getElementById('monthly-profit-detail')!.textContent = `${newMonthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}`;
+          const monthlyProfitAmount = document.getElementById('monthly-profit-amount')!;
+          monthlyProfitAmount.textContent = formatCurrency(newMonthlyProfit);
+          monthlyProfitAmount.className = `font-semibold ${newMonthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+          
+          // Update inventory runway
+          document.getElementById('inventory-runway-days')!.textContent = `${newInventoryRunwayDays} days`;
+          
+          // Update sweet spot
+          const newSweetSpot = calculateSweetSpot(90, newMonthlySales, monthlyProfitPerUnit, unitCost, fbaShippingPerUnit);
+          const sweetSpotTextElement = document.getElementById('sweet-spot-text')!;
+          
+          if (monthlyProfitPerUnit > 0) {
+            sweetSpotTextElement.textContent = `Order ${newSweetSpot.quantity} units (${formatCurrency(newSweetSpot.investment)}) for 90-day break-even with ${newSweetSpot.runwayDays}-day inventory runway`;
+          } else {
+            sweetSpotTextElement.textContent = 'Product needs positive profit margin for sweet spot calculation';
+          }
+          
+          // Update warning visibility
+          const reorderWarning = document.getElementById('reorder-warning')!;
+          if (newInventoryRunwayDays < newBreakEvenDays) {
+            reorderWarning.classList.remove('hidden');
+          } else {
+            reorderWarning.classList.add('hidden');
+          }
+          
+          // Update milestones
+          document.getElementById('milestones')!.innerHTML = `
+            <div class="flex justify-between">
+              <span>50% ROI:</span>
+              <span>${Math.ceil(newBreakEvenDays / 2)} days</span>
+            </div>
+            <div class="flex justify-between">
+              <span>100% ROI:</span>
+              <span>${newBreakEvenDays} days</span>
+            </div>
+            <div class="flex justify-between">
+              <span>200% ROI:</span>
+              <span>${newBreakEvenDays * 2} days</span>
+            </div>
+          `;
+        });
       }
     }
   });
