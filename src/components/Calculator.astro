@@ -15,10 +15,11 @@ import { Label } from "@/components/starwind/label";
       <div>
         <CardTitle>Amazon FBA Calculator</CardTitle>
         <CardDescription>Calculate profit margins and fees for your Amazon FBA products</CardDescription>
-        <hr class="border-border mt-4" />
       </div>
     </CardHeader>
     <CardContent>
+      <hr class="border-border mb-6" />
+      
       <!-- Product Summary (shown after entry) -->
       <div id="product-summary" class="hidden space-y-4">
         <!-- Product Name and Price Row -->
@@ -80,7 +81,7 @@ import { Label } from "@/components/starwind/label";
       </div>
 
       <!-- Initial state (no product entered) -->
-      <div id="no-product-state" class="py-6 text-muted-foreground">
+      <div id="no-product-state" class="text-center py-8 text-muted-foreground">
         <p>Enter your product details to start calculating FBA profits</p>
       </div>
     </CardContent>
@@ -192,11 +193,23 @@ import { Label } from "@/components/starwind/label";
               <!-- Inventory Planning -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">Inventory Planning</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4">
                   <div class="space-y-2">
                     <Label for="average-units">Average Units in FBA</Label>
                     <Input type="number" id="average-units" name="averageUnits" placeholder="100" value="100" min="1" inputmode="numeric" />
                     <p class="text-xs text-muted-foreground">How many units do you plan to keep in stock?</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ROI Timeline Planning -->
+              <div class="space-y-4">
+                <h4 class="text-sm font-medium">ROI Timeline Planning</h4>
+                <div class="grid grid-cols-1 gap-4">
+                  <div class="space-y-2">
+                    <Label for="initial-order-qty">Initial Order Quantity</Label>
+                    <Input type="number" id="initial-order-qty" name="initialOrderQty" placeholder="500" value="500" min="1" inputmode="numeric" />
+                    <p class="text-xs text-muted-foreground">How many units will you order initially?</p>
                   </div>
                 </div>
               </div>
@@ -215,32 +228,50 @@ import { Label } from "@/components/starwind/label";
   </Card>
 
   <!-- Results Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Profit Analysis Card -->
-    <Card class="w-full">
-      <CardHeader>
-        <CardTitle>Profit Analysis</CardTitle>
-        <CardDescription>Comprehensive FBA calculations</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div id="results-container" class="space-y-4">
-          <div class="py-6 text-muted-foreground">
-            <p>Enter product details to see profit analysis</p>
+  <div class="space-y-6">
+    <!-- Top Row: Profit Analysis and Success Criteria -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Profit Analysis Card -->
+      <Card class="w-full">
+        <CardHeader>
+          <CardTitle>Profit Analysis</CardTitle>
+          <CardDescription>Comprehensive FBA calculations</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div id="results-container" class="space-y-4">
+            <div class="text-center py-8 text-muted-foreground">
+              <p>Enter product details to see profit analysis</p>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    <!-- Success Criteria Card -->
+      <!-- Success Criteria Card -->
+      <Card class="w-full">
+        <CardHeader>
+          <CardTitle>Success Criteria</CardTitle>
+          <CardDescription>FBA viability assessment</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div id="criteria-container" class="space-y-3">
+            <div class="text-center py-8 text-muted-foreground">
+              <p>Criteria will appear after calculation</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Bottom Row: Full-width ROI Timeline Card -->
     <Card class="w-full">
       <CardHeader>
-        <CardTitle>Success Criteria</CardTitle>
-        <CardDescription>FBA viability assessment</CardDescription>
+        <CardTitle>ROI Timeline</CardTitle>
+        <CardDescription>Investment recovery timeline and planning</CardDescription>
       </CardHeader>
       <CardContent>
-        <div id="criteria-container" class="space-y-3">
-          <div class="py-6 text-muted-foreground">
-            <p>Criteria will appear after calculation</p>
+        <div id="timeline-container" class="space-y-3">
+          <div class="text-center py-8 text-muted-foreground">
+            <p>Timeline will appear after calculation</p>
           </div>
         </div>
       </CardContent>
@@ -257,6 +288,7 @@ import { Label } from "@/components/starwind/label";
     const form = document.getElementById('product-form') as HTMLFormElement;
     const resultsContainer = document.getElementById('results-container')!;
     const criteriaContainer = document.getElementById('criteria-container')!;
+    const timelineContainer = document.getElementById('timeline-container')!;
     const unitToggle = document.getElementById('unit-toggle') as HTMLElement;
     const unitDisplay = document.getElementById('unit-display') as HTMLSpanElement;
     const triggerButton = document.getElementById('product-dialog-trigger') as HTMLButtonElement;
@@ -428,6 +460,27 @@ import { Label } from "@/components/starwind/label";
       // Calculate break-even price including ad spend
       const breakEvenWithAds = profitability.breakEvenPrice + adSpend;
 
+      // Calculate ROI Timeline
+      const initialOrderQtyElement = document.getElementById('initial-order-qty') as HTMLInputElement;
+      
+      const initialOrderQty = parseInt(initialOrderQtyElement?.value || '500');
+      const monthlySales = 100; // Default value, will be set by slider
+      
+      const unitCost = currentProductData.costOfGoods + (currentProductData.unitShippingCost || 0);
+      const initialInvestment = initialOrderQty * unitCost;
+      const fbaShippingPerUnit = (currentProductData.fbaShippingCost || 0) / initialOrderQty;
+      const totalUnitCost = unitCost + fbaShippingPerUnit;
+      
+      const monthlyProfitPerUnit = (profitability.netProfit - adSpend);
+      const monthlyProfit = monthlySales * monthlyProfitPerUnit;
+      
+      const breakEvenMonths = initialInvestment / monthlyProfit;
+      const breakEvenDays = Math.ceil(breakEvenMonths * 30);
+      
+      // Calculate inventory runway
+      const inventoryRunwayMonths = initialOrderQty / monthlySales;
+      const inventoryRunwayDays = Math.ceil(inventoryRunwayMonths * 30);
+
       // Show the OTHER unit system for reference
       const debugContent = useMetric ? 
         `<span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)` :
@@ -438,7 +491,7 @@ import { Label } from "@/components/starwind/label";
       debugInfoElement.innerHTML = debugContent;
       debugInfoElement.classList.remove('hidden');
 
-      // Render profit analysis without debug info
+      // Render profit analysis
       resultsContainer.innerHTML = `
         <div class="space-y-4">
           <div class="border-b border-border pb-3">
@@ -519,7 +572,7 @@ import { Label } from "@/components/starwind/label";
         </div>
       `;
       
-      // Render success criteria with dark mode support
+      // Render success criteria
       const passedCount = criteria.filter(c => c.passed).length;
       
       // Define color schemes with dark mode support
@@ -578,14 +631,225 @@ import { Label } from "@/components/starwind/label";
                 }
               </div>
               <div class="flex-1">
-                <p class="text-base font-semibold text-foreground dark:text-foreground">${criterion.label}</p>
-                <p class="text-sm text-muted-foreground dark:text-muted-foreground mt-1">${criterion.value} (${criterion.threshold})</p>
-                <p class="text-sm text-muted-foreground dark:text-muted-foreground">${criterion.message}</p>
+                <p class="text-base font-semibold text-foreground">${criterion.label}</p>
+                <p class="text-sm text-muted-foreground mt-1">${criterion.value} (${criterion.threshold})</p>
+                <p class="text-sm text-muted-foreground">${criterion.message}</p>
               </div>
             </div>
           `).join('')}
         </div>
       `;
+
+      // Render ROI Timeline with embedded sliders
+      timelineContainer.innerHTML = `
+        <div class="space-y-4">
+          <!-- Sales Velocity Slider -->
+          <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
+            <label for="timeline-monthly-sales" class="block text-sm font-medium">Expected Monthly Sales</label>
+            <input type="range" id="timeline-monthly-sales" min="10" max="1000" value="${monthlySales}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
+            <div class="flex justify-between text-xs text-muted-foreground">
+              <span>10/mo</span>
+              <span id="timeline-sales-display" class="font-medium">${monthlySales} units/month</span>
+              <span>1000/mo</span>
+            </div>
+          </div>
+
+          <!-- Units Ordered Slider -->
+          <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
+            <label for="timeline-units-ordered" class="block text-sm font-medium">Initial Order Quantity</label>
+            <input type="range" id="timeline-units-ordered" min="100" max="5000" value="${initialOrderQty}" step="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
+            <div class="flex justify-between text-xs text-muted-foreground">
+              <span>100</span>
+              <span id="timeline-units-display" class="font-medium">${initialOrderQty} units</span>
+              <span>5000</span>
+            </div>
+          </div>
+
+          <!-- Break-even Alert -->
+          <div id="breakeven-alert" class="text-center p-4 rounded-lg border ${breakEvenDays <= 90 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : breakEvenDays <= 180 ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'}">
+            <div id="breakeven-days" class="text-2xl font-bold ${breakEvenDays <= 90 ? 'text-green-700 dark:text-green-300' : breakEvenDays <= 180 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}">${breakEvenDays} days</div>
+            <div class="text-sm text-muted-foreground">to break even</div>
+          </div>
+          
+          <div class="space-y-3">
+            <div id="initial-investment-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p class="font-medium">Initial Investment</p>
+                <p id="investment-detail" class="text-sm text-muted-foreground">${initialOrderQty} units @ ${formatCurrency(totalUnitCost)}</p>
+              </div>
+              <p id="investment-amount" class="font-semibold">${formatCurrency(initialInvestment)}</p>
+            </div>
+            
+            <div id="monthly-profit-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p class="font-medium">Monthly Profit</p>
+                <p id="monthly-profit-detail" class="text-sm text-muted-foreground">${monthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}</p>
+              </div>
+              <p id="monthly-profit-amount" class="font-semibold ${monthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${formatCurrency(monthlyProfit)}</p>
+            </div>
+            
+            <div id="inventory-runway-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p class="font-medium">Inventory Runway</p>
+                <p class="text-sm text-muted-foreground">Until reorder needed</p>
+              </div>
+              <p id="inventory-runway-days" class="font-semibold">${inventoryRunwayDays} days</p>
+            </div>
+
+            <!-- Sweet Spot Recommendation -->
+            <div id="sweet-spot-card" class="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p class="text-sm font-medium text-blue-700 dark:text-blue-300">💡 Sweet Spot for 90-day Break-even</p>
+              <p id="sweet-spot-text" class="text-xs text-blue-600 dark:text-blue-400">Calculating optimal order quantity...</p>
+            </div>
+            
+            <div id="reorder-warning" class="${inventoryRunwayDays < breakEvenDays ? '' : 'hidden'} p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <p class="text-sm font-medium text-orange-700 dark:text-orange-300">⚠️ Warning</p>
+              <p class="text-xs text-orange-600 dark:text-orange-400">You'll need to reorder before breaking even</p>
+            </div>
+          </div>
+          
+          <div class="border-t pt-3">
+            <h5 class="font-medium text-sm mb-2">Milestones</h5>
+            <div id="milestones" class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span>50% ROI:</span>
+                <span>${Math.ceil(breakEvenDays / 2)} days</span>
+              </div>
+              <div class="flex justify-between">
+                <span>100% ROI:</span>
+                <span>${breakEvenDays} days</span>
+              </div>
+              <div class="flex justify-between">
+                <span>200% ROI:</span>
+                <span>${breakEvenDays * 2} days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Calculate sweet spot for 90-day break-even
+      function calculateSweetSpot(targetDays: number, monthlySales: number, monthlyProfitPerUnit: number, unitCost: number, fbaShippingPerUnit: number) {
+        // For break-even in targetDays: initialInvestment = monthlyProfit * (targetDays / 30)
+        // initialInvestment = orderQty * unitCost
+        // monthlyProfit = monthlySales * monthlyProfitPerUnit
+        // So: orderQty = (monthlySales * monthlyProfitPerUnit * targetDays / 30) / unitCost
+        
+        const targetMonthlyProfit = monthlySales * monthlyProfitPerUnit;
+        const targetInvestment = targetMonthlyProfit * (targetDays / 30);
+        const sweetSpotQty = Math.round(targetInvestment / unitCost);
+        
+        return {
+          quantity: sweetSpotQty,
+          investment: sweetSpotQty * unitCost,
+          runwayDays: Math.ceil((sweetSpotQty / monthlySales) * 30)
+        };
+      }
+
+      const sweetSpot = calculateSweetSpot(90, monthlySales, monthlyProfitPerUnit, unitCost, fbaShippingPerUnit);
+      const sweetSpotText = document.getElementById('sweet-spot-text')!;
+      
+      if (monthlyProfitPerUnit > 0) {
+        sweetSpotText.textContent = `Order ${sweetSpot.quantity} units (${formatCurrency(sweetSpot.investment)}) for 90-day break-even with ${sweetSpot.runwayDays}-day inventory runway`;
+      } else {
+        sweetSpotText.textContent = 'Product needs positive profit margin for sweet spot calculation';
+      }
+
+      // Add event listeners for both sliders
+      const timelineSlider = document.getElementById('timeline-monthly-sales') as HTMLInputElement;
+      const timelineSalesDisplay = document.getElementById('timeline-sales-display') as HTMLElement;
+      const unitsSlider = document.getElementById('timeline-units-ordered') as HTMLInputElement;
+      const unitsDisplay = document.getElementById('timeline-units-display') as HTMLElement;
+      
+      function updateCalculations() {
+        const currentMonthlySales = parseInt(timelineSlider.value);
+        const currentOrderQty = parseInt(unitsSlider.value);
+        
+        // Recalculate all values
+        const currentInitialInvestment = currentOrderQty * unitCost;
+        const currentMonthlyProfit = currentMonthlySales * monthlyProfitPerUnit;
+        const currentBreakEvenMonths = currentInitialInvestment / currentMonthlyProfit;
+        const currentBreakEvenDays = Math.ceil(currentBreakEvenMonths * 30);
+        const currentInventoryRunwayMonths = currentOrderQty / currentMonthlySales;
+        const currentInventoryRunwayDays = Math.ceil(currentInventoryRunwayMonths * 30);
+        
+        // Update displays
+        timelineSalesDisplay.textContent = `${currentMonthlySales} units/month`;
+        unitsDisplay.textContent = `${currentOrderQty} units`;
+        
+        // Update break-even alert
+        const breakEvenAlert = document.getElementById('breakeven-alert')!;
+        const breakEvenDaysElement = document.getElementById('breakeven-days')!;
+        
+        const isGood = currentBreakEvenDays <= 90;
+        const isOkay = currentBreakEvenDays <= 180;
+        
+        breakEvenAlert.className = `text-center p-4 rounded-lg border ${
+          isGood ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 
+          isOkay ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 
+          'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+        }`;
+        
+        breakEvenDaysElement.className = `text-2xl font-bold ${
+          isGood ? 'text-green-700 dark:text-green-300' : 
+          isOkay ? 'text-yellow-700 dark:text-yellow-300' : 
+          'text-red-700 dark:text-red-300'
+        }`;
+        
+        breakEvenDaysElement.textContent = `${currentBreakEvenDays} days`;
+        
+        // Update investment card
+        document.getElementById('investment-detail')!.textContent = `${currentOrderQty} units @ ${formatCurrency(totalUnitCost)}`;
+        document.getElementById('investment-amount')!.textContent = formatCurrency(currentInitialInvestment);
+        
+        // Update monthly profit
+        document.getElementById('monthly-profit-detail')!.textContent = `${currentMonthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}`;
+        const monthlyProfitAmount = document.getElementById('monthly-profit-amount')!;
+        monthlyProfitAmount.textContent = formatCurrency(currentMonthlyProfit);
+        monthlyProfitAmount.className = `font-semibold ${currentMonthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+        
+        // Update inventory runway
+        document.getElementById('inventory-runway-days')!.textContent = `${currentInventoryRunwayDays} days`;
+        
+        // Update sweet spot
+        const currentSweetSpot = calculateSweetSpot(90, currentMonthlySales, monthlyProfitPerUnit, unitCost, fbaShippingPerUnit);
+        const sweetSpotTextElement = document.getElementById('sweet-spot-text')!;
+        
+        if (monthlyProfitPerUnit > 0) {
+          sweetSpotTextElement.textContent = `Order ${currentSweetSpot.quantity} units (${formatCurrency(currentSweetSpot.investment)}) for 90-day break-even with ${currentSweetSpot.runwayDays}-day inventory runway`;
+        } else {
+          sweetSpotTextElement.textContent = 'Product needs positive profit margin for sweet spot calculation';
+        }
+        
+        // Update warning visibility
+        const reorderWarning = document.getElementById('reorder-warning')!;
+        if (currentInventoryRunwayDays < currentBreakEvenDays) {
+          reorderWarning.classList.remove('hidden');
+        } else {
+          reorderWarning.classList.add('hidden');
+        }
+        
+        // Update milestones
+        document.getElementById('milestones')!.innerHTML = `
+          <div class="flex justify-between">
+            <span>50% ROI:</span>
+            <span>${Math.ceil(currentBreakEvenDays / 2)} days</span>
+          </div>
+          <div class="flex justify-between">
+            <span>100% ROI:</span>
+            <span>${currentBreakEvenDays} days</span>
+          </div>
+          <div class="flex justify-between">
+            <span>200% ROI:</span>
+            <span>${currentBreakEvenDays * 2} days</span>
+          </div>
+        `;
+      }
+
+      if (timelineSlider && unitsSlider) {
+        timelineSlider.addEventListener('input', updateCalculations);
+        unitsSlider.addEventListener('input', updateCalculations);
+      }
     }
   });
 </script>
