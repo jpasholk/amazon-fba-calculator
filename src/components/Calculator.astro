@@ -85,6 +85,72 @@ import { Skeleton } from "@/components/starwind/skeleton";
       <div id="no-product-state" class="text-center py-8 text-muted-foreground">
         <p>Enter your product details to start calculating FBA profits</p>
       </div>
+
+      <!-- Product Summary Skeleton (shown during initial load) -->
+      <div id="product-skeleton" class="space-y-4">
+        <!-- Loading state with overlay text -->
+        <div class="relative">
+          <!-- Product Name and Price Row Skeleton -->
+          <div class="grid grid-cols-4 gap-4 mb-4">
+            <div class="col-span-3 space-y-2">
+              <Skeleton class="h-6 w-3/4" />
+              <Skeleton class="h-4 w-1/2" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-8 w-full" />
+              <Skeleton class="h-3 w-2/3" />
+            </div>
+          </div>
+
+          <!-- Cost Breakdown Row Skeleton -->
+          <div class="grid grid-cols-4 gap-4 text-sm border-t pt-4 mb-4">
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+          </div>
+
+          <!-- Dimensions Row Skeleton -->
+          <div class="grid grid-cols-4 gap-4 text-sm">
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+            <div class="space-y-2">
+              <Skeleton class="h-3 w-full" />
+              <Skeleton class="h-4 w-2/3" />
+            </div>
+          </div>
+
+          <!-- Overlay text -->
+          <div class="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+            <div class="text-center">
+              <p class="text-sm font-medium text-muted-foreground">Enter product details to see</p>
+              <p class="text-lg font-semibold">Product Summary</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </CardContent>
     <CardFooter>
       <Dialog>
@@ -240,19 +306,29 @@ import { Skeleton } from "@/components/starwind/skeleton";
         </CardHeader>
         <CardContent>
           <div id="results-container" class="space-y-4">
-            <div class="flex flex-col space-y-3">
-              <Skeleton class="h-[40px] w-full rounded-lg" />
-              <div class="space-y-2">
-                <Skeleton class="h-4 w-full" />
-                <Skeleton class="h-4 w-3/4" />
+            <!-- Loading state with overlay text -->
+            <div class="relative">
+              <div class="flex flex-col space-y-3">
+                <Skeleton class="h-[40px] w-full rounded-lg" />
+                <div class="space-y-2">
+                  <Skeleton class="h-4 w-full" />
+                  <Skeleton class="h-4 w-3/4" />
+                </div>
+                <div class="space-y-2">
+                  <Skeleton class="h-4 w-full" />
+                  <Skeleton class="h-4 w-2/3" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <Skeleton class="h-[60px] w-full rounded-lg" />
+                  <Skeleton class="h-[60px] w-full rounded-lg" />
+                </div>
               </div>
-              <div class="space-y-2">
-                <Skeleton class="h-4 w-full" />
-                <Skeleton class="h-4 w-2/3" />
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <Skeleton class="h-[60px] w-full rounded-lg" />
-                <Skeleton class="h-[60px] w-full rounded-lg" />
+              <!-- Overlay text -->
+              <div class="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                <div class="text-center">
+                  <p class="text-sm font-medium text-muted-foreground">Enter product details to see</p>
+                  <p class="text-lg font-semibold">Profit Analysis</p>
+                </div>
               </div>
             </div>
           </div>
@@ -267,29 +343,39 @@ import { Skeleton } from "@/components/starwind/skeleton";
         </CardHeader>
         <CardContent>
           <div id="criteria-container" class="space-y-3">
-            <div class="flex flex-col space-y-3">
-              <Skeleton class="h-[80px] w-full rounded-lg" />
-              <div class="space-y-3">
-                <div class="flex items-center space-x-3">
-                  <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
-                  <div class="flex-1 space-y-2">
-                    <Skeleton class="h-4 w-3/4" />
-                    <Skeleton class="h-3 w-1/2" />
+            <!-- Loading state with overlay text -->
+            <div class="relative">
+              <div class="flex flex-col space-y-3">
+                <Skeleton class="h-[80px] w-full rounded-lg" />
+                <div class="space-y-3">
+                  <div class="flex items-center space-x-3">
+                    <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
+                    <div class="flex-1 space-y-2">
+                      <Skeleton class="h-4 w-3/4" />
+                      <Skeleton class="h-3 w-1/2" />
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
+                    <div class="flex-1 space-y-2">
+                      <Skeleton class="h-4 w-2/3" />
+                      <Skeleton class="h-3 w-1/3" />
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-3">
+                    <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
+                    <div class="flex-1 space-y-2">
+                      <Skeleton class="h-4 w-3/5" />
+                      <Skeleton class="h-3 w-2/5" />
+                    </div>
                   </div>
                 </div>
-                <div class="flex items-center space-x-3">
-                  <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
-                  <div class="flex-1 space-y-2">
-                    <Skeleton class="h-4 w-2/3" />
-                    <Skeleton class="h-3 w-1/3" />
-                  </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                  <Skeleton class="h-3 w-3 rounded-full flex-shrink-0" />
-                  <div class="flex-1 space-y-2">
-                    <Skeleton class="h-4 w-3/5" />
-                    <Skeleton class="h-3 w-2/5" />
-                  </div>
+              </div>
+              <!-- Overlay text -->
+              <div class="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                <div class="text-center">
+                  <p class="text-sm font-medium text-muted-foreground">Enter product details to see</p>
+                  <p class="text-lg font-semibold">Success Criteria</p>
                 </div>
               </div>
             </div>
@@ -306,33 +392,43 @@ import { Skeleton } from "@/components/starwind/skeleton";
       </CardHeader>
       <CardContent>
         <div id="timeline-container" class="space-y-3">
-          <div class="flex flex-col space-y-4">
-            <!-- Slider skeleton -->
-            <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
-              <Skeleton class="h-4 w-1/3" />
-              <Skeleton class="h-2 w-full rounded-lg" />
-              <div class="flex justify-between">
-                <Skeleton class="h-3 w-8" />
-                <Skeleton class="h-3 w-16" />
-                <Skeleton class="h-3 w-8" />
+          <!-- Loading state with overlay text -->
+          <div class="relative">
+            <div class="flex flex-col space-y-4">
+              <!-- Slider skeleton -->
+              <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
+                <Skeleton class="h-4 w-1/3" />
+                <Skeleton class="h-2 w-full rounded-lg" />
+                <div class="flex justify-between">
+                  <Skeleton class="h-3 w-8" />
+                  <Skeleton class="h-3 w-16" />
+                  <Skeleton class="h-3 w-8" />
+                </div>
+              </div>
+              
+              <!-- Alert skeleton -->
+              <Skeleton class="h-[80px] w-full rounded-lg" />
+              
+              <!-- Cards skeleton -->
+              <div class="space-y-3">
+                <Skeleton class="h-[60px] w-full rounded-lg" />
+              </div>
+              
+              <!-- Milestones skeleton -->
+              <div class="border-t pt-3 space-y-2">
+                <Skeleton class="h-4 w-20" />
+                <div class="space-y-2">
+                  <Skeleton class="h-3 w-full" />
+                  <Skeleton class="h-3 w-full" />
+                  <Skeleton class="h-3 w-full" />
+                </div>
               </div>
             </div>
-            
-            <!-- Alert skeleton -->
-            <Skeleton class="h-[80px] w-full rounded-lg" />
-            
-            <!-- Cards skeleton -->
-            <div class="space-y-3">
-              <Skeleton class="h-[60px] w-full rounded-lg" />
-            </div>
-            
-            <!-- Milestones skeleton -->
-            <div class="border-t pt-3 space-y-2">
-              <Skeleton class="h-4 w-20" />
-              <div class="space-y-2">
-                <Skeleton class="h-3 w-full" />
-                <Skeleton class="h-3 w-full" />
-                <Skeleton class="h-3 w-full" />
+            <!-- Overlay text -->
+            <div class="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+              <div class="text-center">
+                <p class="text-sm font-medium text-muted-foreground">Enter product details to see</p>
+                <p class="text-lg font-semibold">ROI Timeline</p>
               </div>
             </div>
           </div>
@@ -359,6 +455,7 @@ import { Skeleton } from "@/components/starwind/skeleton";
     // Summary elements
     const productSummary = document.getElementById('product-summary')!;
     const noProductState = document.getElementById('no-product-state')!;
+    const productSkeleton = document.getElementById('product-skeleton')!;
 
     // Unit labels
     const lengthLabel = document.getElementById('length-label') as HTMLLabelElement;
@@ -368,6 +465,10 @@ import { Skeleton } from "@/components/starwind/skeleton";
 
     let isImperialUnits = false;
     let currentProductData: ProductData | null = null;
+
+    // Initialize - show skeleton instead of no-product state
+    noProductState.classList.add('hidden');
+    productSkeleton.classList.remove('hidden');
 
     function updateUnitDisplay() {
       if (isImperialUnits) {
@@ -451,8 +552,9 @@ import { Skeleton } from "@/components/starwind/skeleton";
       document.getElementById('summary-height')!.textContent = `${productData.dimensions.height}${unitSuffix.length}`;
       document.getElementById('summary-weight')!.textContent = `${productData.dimensions.weight}${unitSuffix.weight}`;
 
-      // Show summary, hide no-product state
+      // Show summary, hide skeleton and no-product state
       productSummary.classList.remove('hidden');
+      productSkeleton.classList.add('hidden');
       noProductState.classList.add('hidden');
       triggerButton.textContent = 'Edit Product Details';
     }
