@@ -430,3 +430,17 @@ export function evaluateSuccessCriteria(productData: ProductData, profitAnalysis
 
   return results;
 }
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount);
+}
+
+export function formatSmallCurrency(amount: number): string {
+  if (amount > 0 && amount < 0.01) {
+    return `$${amount.toFixed(4)}`;
+  }
+  return formatCurrency(amount);
+}

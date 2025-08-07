@@ -81,11 +81,6 @@ import { Skeleton } from "@/components/starwind/skeleton";
         <!-- Debug content will be inserted here -->
       </div>
 
-      <!-- Initial state (no product entered) -->
-      <div id="no-product-state" class="text-center py-8 text-muted-foreground">
-        <p>Enter your product details to start calculating FBA profits</p>
-      </div>
-
       <!-- Product Summary Skeleton (shown during initial load) -->
       <div id="product-skeleton" class="space-y-4">
         <!-- Loading state with overlay text -->
@@ -152,10 +147,10 @@ import { Skeleton } from "@/components/starwind/skeleton";
         </div>
       </div>
     </CardContent>
-    <CardFooter>
+    <CardFooter class="flex gap-2">
       <Dialog>
         <DialogTrigger asChild>
-          <Button id="product-dialog-trigger" class="w-full">Enter Product Details</Button>
+          <Button id="product-dialog-trigger" class="flex-1">Enter Product Details</Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[600px] max-h-[90vh]" animationDuration={200}>
           <form id="product-form" method="dialog" class="flex flex-col gap-4">
@@ -289,6 +284,60 @@ import { Skeleton } from "@/components/starwind/skeleton";
               <Button type="submit">Calculate Profit</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      
+      <!-- Save Button (shown only when product is calculated) -->
+      <Button id="save-product-btn" variant="outline" class="hidden">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+        </svg>
+        Save
+      </Button>
+      
+      <!-- Saved Products Dialog -->
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button id="load-product-btn" variant="outline">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+            </svg>
+            Saved Products
+            <span id="saved-count" class="ml-1 px-1.5 py-0.5 text-xs bg-muted rounded-full hidden">0</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-[600px] max-h-[90vh]" animationDuration={200}>
+          <DialogHeader>
+            <DialogTitle>Saved Products</DialogTitle>
+            <DialogDescription>
+              Load a previously saved product or manage your saved calculations.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div class="py-4">
+            <div id="saved-products-list" class="space-y-3 max-h-[500px] overflow-y-auto">
+              <!-- Saved products will be populated here with accordion styling -->
+            </div>
+            
+            <div id="no-saved-products" class="text-center py-8 text-muted-foreground">
+              <svg class="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p class="font-medium">No saved products yet</p>
+              <p class="text-sm">Calculate and save a product to see it here</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <div class="flex justify-between w-full">
+              <Button id="clear-all-products" variant="error" size="sm" class="hidden">
+                Clear All
+              </Button>
+              <DialogClose asChild>
+                <Button variant="outline">Close</Button>
+              </DialogClose>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </CardFooter>
@@ -439,23 +488,44 @@ import { Skeleton } from "@/components/starwind/skeleton";
 </div>
 
 <script>
-  import { calculateAmazonFees, calculateProfitability, evaluateSuccessCriteria, calculateFBASizeTier, cmToInches, kgToPounds } from '../utils/fbaCalculations';
+  import { 
+    calculateAmazonFees, 
+    calculateProfitability, 
+    evaluateSuccessCriteria, 
+    calculateFBASizeTier, 
+    cmToInches, 
+    kgToPounds,
+    formatCurrency,
+    formatSmallCurrency
+  } from '../utils/fbaCalculations';
+  import { getSavedProducts, saveProduct, deleteProduct, clearAllProducts, getCategoryDisplayName, type SavedProduct } from '../utils/productStorage';
+  import { createUnitToggleHandler, type UnitToggleElements } from '../utils/unitToggle';
   import type { ProductData } from '../types/calculator';
   import type { SwitchChangeEvent } from "@/components/starwind/switch";
 
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM Content Loaded - Calculator initializing');
+
+    // 1. DECLARE ALL VARIABLES FIRST
     const form = document.getElementById('product-form') as HTMLFormElement;
     const resultsContainer = document.getElementById('results-container')!;
     const criteriaContainer = document.getElementById('criteria-container')!;
     const timelineContainer = document.getElementById('timeline-container')!;
     const unitToggle = document.getElementById('unit-toggle') as HTMLElement;
-    const unitDisplay = document.getElementById('unit-display') as HTMLSpanElement;
     const triggerButton = document.getElementById('product-dialog-trigger') as HTMLButtonElement;
     
     // Summary elements
     const productSummary = document.getElementById('product-summary')!;
-    const noProductState = document.getElementById('no-product-state')!;
     const productSkeleton = document.getElementById('product-skeleton')!;
+
+    // Local storage elements
+    const saveProductBtn = document.getElementById('save-product-btn')!;
+    const loadProductBtn = document.getElementById('load-product-btn')!;
+    const savedProductsList = document.getElementById('saved-products-list')!;
+    const noSavedProducts = document.getElementById('no-saved-products')!;
+    const clearAllBtn = document.getElementById('clear-all-products')!;
+    const savedCount = document.getElementById('saved-count')!;
+    const saveToast = document.getElementById('save-toast')!;
 
     // Unit labels
     const lengthLabel = document.getElementById('length-label') as HTMLLabelElement;
@@ -463,80 +533,74 @@ import { Skeleton } from "@/components/starwind/skeleton";
     const heightLabel = document.getElementById('height-label') as HTMLLabelElement;
     const weightLabel = document.getElementById('weight-label') as HTMLLabelElement;
 
-    let isImperialUnits = false;
     let currentProductData: ProductData | null = null;
 
-    // Initialize - show skeleton instead of no-product state
-    noProductState.classList.add('hidden');
-    productSkeleton.classList.remove('hidden');
+    // Initialize unit toggle
+    const unitToggleElements: UnitToggleElements = {
+      unitDisplay: document.getElementById('unit-display') as HTMLElement,
+      lengthLabel,
+      widthLabel,
+      heightLabel,
+      weightLabel,
+      lengthInput: document.getElementById('length') as HTMLInputElement,
+      widthInput: document.getElementById('width') as HTMLInputElement,
+      heightInput: document.getElementById('height') as HTMLInputElement,
+      weightInput: document.getElementById('weight') as HTMLInputElement,
+    };
 
-    function updateUnitDisplay() {
-      if (isImperialUnits) {
-        unitDisplay.textContent = 'Currently: Imperial (inches/lbs)';
-        lengthLabel.textContent = 'Length (inches)';
-        widthLabel.textContent = 'Width (inches)';
-        heightLabel.textContent = 'Height (inches)';
-        weightLabel.textContent = 'Weight (lbs)';
-        
-        (document.getElementById('length') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('width') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('height') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('weight') as HTMLInputElement).placeholder = '0';
-      } else {
-        unitDisplay.textContent = 'Currently: Metric (cm/kg)';
-        lengthLabel.textContent = 'Length (cm)';
-        widthLabel.textContent = 'Width (cm)';
-        heightLabel.textContent = 'Height (cm)';
-        weightLabel.textContent = 'Weight (kg)';
-        
-        (document.getElementById('length') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('width') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('height') as HTMLInputElement).placeholder = '0';
-        (document.getElementById('weight') as HTMLInputElement).placeholder = '0';
-      }
+    const unitToggleHandler = createUnitToggleHandler(unitToggleElements);
+
+    // 2. DEFINE ALL FUNCTIONS NEXT
+    function initializeButtonVisibility(): void {
+      console.log('🔍 Initializing button visibility');
       
-      if (currentProductData) {
-        updateProductSummary(currentProductData);
+      // Use !hidden for both buttons (specificity issue with Starwind components)
+      saveProductBtn.classList.add('!hidden');
+      
+      const savedProducts = getSavedProducts();
+      if (savedProducts.length === 0) {
+        loadProductBtn.classList.add('!hidden'); // Use !hidden here too
+        console.log('🔍 No saved products - hiding load button');
+      } else {
+        loadProductBtn.classList.remove('!hidden');
+        console.log('🔍 Found saved products - showing load button');
       }
     }
 
-    // Initialize
-    isImperialUnits = false;
-    updateUnitDisplay();
-
-    // Unit toggle listener
-    unitToggle.addEventListener("starwind-switch:change", (e: Event) => {
-      const event = e as SwitchChangeEvent;
-      if (event.detail.switchId === "unit-toggle") {
-        isImperialUnits = event.detail.checked;
-        updateUnitDisplay();
-        if (currentProductData) {
-          calculateResults();
+    function loadProduct(product: SavedProduct): void {
+      try {
+        (document.getElementById('product-name') as HTMLInputElement).value = product.name;
+        (document.getElementById('selling-price') as HTMLInputElement).value = product.sellingPrice.toString();
+        (document.getElementById('cost-of-goods') as HTMLInputElement).value = product.costOfGoods.toString();
+        (document.getElementById('unit-shipping-cost') as HTMLInputElement).value = (product.unitShippingCost || 0).toString();
+        (document.getElementById('fba-shipping-cost') as HTMLInputElement).value = (product.fbaShippingCost || 0).toString();
+        (document.getElementById('length') as HTMLInputElement).value = product.dimensions.length.toString();
+        (document.getElementById('width') as HTMLInputElement).value = product.dimensions.width.toString();
+        (document.getElementById('height') as HTMLInputElement).value = product.dimensions.height.toString();
+        (document.getElementById('weight') as HTMLInputElement).value = product.dimensions.weight.toString();
+        
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+          categorySelect.setAttribute('data-value', product.category);
         }
-      }
-    });
 
-    // Update product summary display
+        currentProductData = product;
+        updateProductSummary(product);
+        calculateResults();
+        
+        const closeBtn = document.querySelector('[data-dialog-close]') as HTMLElement;
+        closeBtn?.click();
+      } catch (error) {
+        console.error('Error loading product:', error);
+        alert('Failed to load product');
+      }
+    }
+
     function updateProductSummary(productData: ProductData) {
-      const unitSuffix = isImperialUnits ? 
-        { length: '"', weight: ' lbs' } : 
-        { length: ' cm', weight: ' kg' };
-
-      // Map category values to display names
-      function getCategoryDisplayName(categoryValue: string): string {
-        const categoryMap: { [key: string]: string } = {
-          'electronics': 'Electronics',
-          'home-kitchen': 'Home & Kitchen',
-          'clothing': 'Clothing & Accessories',
-          'books': 'Books',
-          'toys-games': 'Toys & Games',
-          'sports': 'Sports & Outdoors',
-          'beauty': 'Beauty & Personal Care',
-          'other': 'Other'
-        };
-        return categoryMap[categoryValue] || categoryValue;
-      }
-
+      console.log('📋 updateProductSummary started with:', productData);
+      
+      const unitState = unitToggleHandler.getUnitState();
+      console.log('📏 Unit state in summary:', unitState);
       const totalCost = productData.costOfGoods + (productData.unitShippingCost || 0) + (productData.fbaShippingCost || 0);
 
       document.getElementById('summary-name')!.textContent = productData.name;
@@ -547,123 +611,239 @@ import { Skeleton } from "@/components/starwind/skeleton";
       document.getElementById('summary-category')!.textContent = getCategoryDisplayName(productData.category);
       document.getElementById('summary-total-cost')!.textContent = `$${totalCost.toFixed(2)}`;
       
-      document.getElementById('summary-length')!.textContent = `${productData.dimensions.length}${unitSuffix.length}`;
-      document.getElementById('summary-width')!.textContent = `${productData.dimensions.width}${unitSuffix.length}`;
-      document.getElementById('summary-height')!.textContent = `${productData.dimensions.height}${unitSuffix.length}`;
-      document.getElementById('summary-weight')!.textContent = `${productData.dimensions.weight}${unitSuffix.weight}`;
+      document.getElementById('summary-length')!.textContent = `${productData.dimensions.length}${unitState.unitSuffix.length}`;
+      document.getElementById('summary-width')!.textContent = `${productData.dimensions.width}${unitState.unitSuffix.length}`;
+      document.getElementById('summary-height')!.textContent = `${productData.dimensions.height}${unitState.unitSuffix.length}`;
+      document.getElementById('summary-weight')!.textContent = `${productData.dimensions.weight}${unitState.unitSuffix.weight}`;
 
-      // Show summary, hide skeleton and no-product state
-      productSummary.classList.remove('hidden');
-      productSkeleton.classList.add('hidden');
-      noProductState.classList.add('hidden');
+      // Show summary, hide skeleton
+      productSummary.classList.remove('hidden'); // Regular hidden works fine
+      productSkeleton.classList.add('hidden'); // Regular hidden works fine
       triggerButton.textContent = 'Edit Product Details';
+
+      // NOW show save button - product details have been entered
+      console.log('🔍 Product details entered - showing save button');
+      saveProductBtn.classList.remove('!hidden'); // Use !hidden only for save button
+
+      console.log('📋 updateProductSummary completed');
     }
 
-    // Form submission handler
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const formData = new FormData(form);
-      const productData: ProductData = {
-        name: formData.get('name') as string,
-        sellingPrice: parseFloat(formData.get('sellingPrice') as string),
-        costOfGoods: parseFloat(formData.get('costOfGoods') as string),
-        unitShippingCost: parseFloat(formData.get('unitShippingCost') as string) || 0,
-        fbaShippingCost: parseFloat(formData.get('fbaShippingCost') as string) || 0,
-        category: formData.get('category') as string,
-        dimensions: {
-          length: parseFloat(formData.get('length') as string),
-          width: parseFloat(formData.get('width') as string),
-          height: parseFloat(formData.get('height') as string),
-          weight: parseFloat(formData.get('weight') as string)
+    function updateSavedProductsUI(): void {
+      savedProductsList.innerHTML = '';
+      const savedProducts = getSavedProducts();
+      const productCount = savedProducts.length;
+
+      savedCount.textContent = productCount.toString();
+      savedCount.classList.toggle('hidden', productCount === 0); // Regular hidden works fine for span
+
+      // Show/hide load products button based on saved products count
+      if (productCount === 0) {
+        loadProductBtn.classList.add('!hidden'); // Use !hidden here too
+        console.log('🔍 No saved products - hiding load button');
+      } else {
+        loadProductBtn.classList.remove('!hidden'); // Use !hidden here too
+        console.log('🔍 Found saved products - showing load button');
+      }
+
+      clearAllBtn.classList.toggle('hidden', productCount === 0); // Regular hidden works fine
+      noSavedProducts.classList.toggle('hidden', productCount > 0); // Regular hidden works fine
+
+      // ...rest of existing code...
+      savedProducts.forEach(product => {
+        const productItem = document.createElement('div');
+        productItem.className = 'p-4 rounded-lg bg-muted flex flex-col gap-2';
+        
+        const unitShippingCost = product.unitShippingCost ?? 0;
+        const fbaShippingCost = product.fbaShippingCost ?? 0;
+        const totalCost = product.costOfGoods + unitShippingCost + fbaShippingCost;
+        
+        productItem.innerHTML = `
+          <div class="flex justify-between items-center">
+            <h5 class="font-medium text-lg" title="${product.name}">${product.name}</h5>
+            <div class="text-xs ${product.category === 'other' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}">
+              ${product.category === 'other' ? '⚠️' : '✔️'} ${getCategoryDisplayName(product.category)}
+            </div>
+          </div>
+          <div class="text-sm text-muted-foreground">
+            Selling Price: <span class="font-semibold text-foreground">$${product.sellingPrice.toFixed(2)}</span>
+          </div>
+          <div class="text-sm text-muted-foreground">
+            Total Cost: <span class="font-semibold text-foreground">$${totalCost.toFixed(2)}</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">${calculateFBASizeTier(product.dimensions, true).replace('_', ' ')}</span>
+            <span class="text-xs px-2 py-1 rounded-full ${product.dimensions.weight > 1 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}">
+              ${product.dimensions.weight.toFixed(2)} ${product.dimensions.weight > 1 ? 'lbs' : 'kg'}
+            </span>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3" id="load-product-${product.id}">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Load Product
+            </button>
+            <button class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-outline disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950" id="delete-product-${product.id}">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+        `;
+
+        savedProductsList.appendChild(productItem);
+
+        document.getElementById(`load-product-${product.id}`)!.addEventListener('click', () => {
+          loadProduct(product);
+        });
+        document.getElementById(`delete-product-${product.id}`)!.addEventListener('click', () => {
+          handleDeleteProduct(product.id);
+        });
+      });
+    }
+
+    function handleSaveProduct(): void {
+      if (currentProductData) {
+        try {
+          const currentCalculations = getCurrentCalculations();
+          saveProduct(currentProductData, currentCalculations);
+          updateSavedProductsUI(); // This will show the load button if it was hidden
+          showSaveToast();
+        } catch (error) {
+          console.error('Error saving product:', error);
+          alert('Failed to save product. Storage might be full.');
         }
-      };
-
-      // Validation
-      if (!productData.name || !productData.category || 
-          isNaN(productData.sellingPrice) || isNaN(productData.costOfGoods) ||
-          isNaN(productData.dimensions.length) || isNaN(productData.dimensions.width) ||
-          isNaN(productData.dimensions.height) || isNaN(productData.dimensions.weight)) {
-        alert('Please fill in all required fields');
-        return;
       }
-
-      currentProductData = productData;
-      updateProductSummary(productData);
-      calculateResults();
-    });
-
-    function formatCurrency(amount: number): string {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-      }).format(amount);
     }
-
-    function formatSmallCurrency(amount: number): string {
-      if (amount > 0 && amount < 0.01) {
-        return `$${amount.toFixed(4)}`;
+    
+    function handleDeleteProduct(id: string): void {
+      try {
+        deleteProduct(id);
+        updateSavedProductsUI(); // This will hide the load button if no products remain
+      } catch (error) {
+        console.error('Error deleting product:', error);
       }
-      return formatCurrency(amount);
+    }
+    
+    function handleClearAllProducts(): void {
+      if (confirm('Are you sure you want to delete all saved products? This cannot be undone.')) {
+        clearAllProducts();
+        updateSavedProductsUI(); // This will hide the load button since no products remain
+      }
     }
 
     function calculateResults() {
-      if (!currentProductData) return;
+      console.log('🔍 =========================');
+      console.log('🔍 Starting calculateResults()');
+      console.log('🔍 =========================');
+      
+      if (!currentProductData) {
+        console.error('❌ No currentProductData available');
+        return;
+      }
 
+      console.log('✅ Current product data:', currentProductData);
+
+      const unitState = unitToggleHandler.getUnitState();
+      console.log('📏 Unit state:', unitState);
+      
+      const useMetric = !unitState.isImperialUnits;
+      console.log('📏 Using metric units:', useMetric);
+      
       const averageUnitsElement = document.getElementById('average-units') as HTMLInputElement;
+      console.log('📦 Average units element:', averageUnitsElement);
+      console.log('📦 Average units value:', averageUnitsElement?.value);
+      
       const averageUnits = averageUnitsElement ? parseInt(averageUnitsElement.value) || 100 : 100;
+      console.log('📦 Final average units:', averageUnits);
       
-      const useMetric = !isImperialUnits;
+      console.log('💰 Calculating Amazon fees...');
       const fees = calculateAmazonFees(currentProductData, useMetric, { averageUnitsStored: averageUnits });
-      const profitability = calculateProfitability(currentProductData, fees);
-      const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
-      const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
-
-      // Calculate ad spend
-      const adSpend = Math.floor(currentProductData.sellingPrice * 0.20 * 100) / 100;
+      console.log('💰 Fees calculated:', fees);
       
-      // Calculate break-even price including ad spend
-      const breakEvenWithAds = profitability.breakEvenPrice + adSpend;
+      console.log('📊 Calculating profitability...');
+      const profitability = calculateProfitability(currentProductData, fees);
+      console.log('📊 Profitability calculated:', profitability);
+      
+      console.log('✅ Evaluating success criteria...');
+      const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
+      console.log('✅ Criteria evaluated:', criteria);
+      
+      console.log('📏 Calculating FBA size tier...');
+      const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
+      console.log('📏 Size tier calculated:', sizeTier);
 
-      // Calculate ROI Timeline
+      const adSpend = Math.floor(currentProductData.sellingPrice * 0.20 * 100) / 100;
+      console.log('📢 Ad spend calculated:', adSpend);
+      
+      const breakEvenWithAds = profitability.breakEvenPrice + adSpend;
+      console.log('💰 Break even with ads:', breakEvenWithAds);
+
       const initialOrderQtyElement = document.getElementById('initial-order-qty') as HTMLInputElement;
+      console.log('📦 Initial order qty element:', initialOrderQtyElement);
+      console.log('📦 Initial order qty value:', initialOrderQtyElement?.value);
       
       const initialOrderQty = parseInt(initialOrderQtyElement?.value || '500');
-      const monthlySales = 100; // Default value, will be set by slider
+      console.log('📦 Final initial order qty:', initialOrderQty);
+      
+      const monthlySales = 100;
+      console.log('📈 Monthly sales (hardcoded):', monthlySales);
       
       const unitCost = currentProductData.costOfGoods + (currentProductData.unitShippingCost || 0);
+      console.log('💵 Unit cost:', unitCost);
+      
       const initialInvestment = initialOrderQty * unitCost;
+      console.log('💰 Initial investment:', initialInvestment);
+      
       const fbaShippingPerUnit = (currentProductData.fbaShippingCost || 0) / initialOrderQty;
+      console.log('🚚 FBA shipping per unit:', fbaShippingPerUnit);
+      
       const totalUnitCost = unitCost + fbaShippingPerUnit;
+      console.log('💵 Total unit cost:', totalUnitCost);
       
       const monthlyProfitPerUnit = (profitability.netProfit - adSpend);
+      console.log('📈 Monthly profit per unit:', monthlyProfitPerUnit);
+      
       const monthlyProfit = monthlySales * monthlyProfitPerUnit;
+      console.log('📈 Monthly profit total:', monthlyProfit);
       
       const breakEvenMonths = initialInvestment / monthlyProfit;
-      const breakEvenDays = Math.ceil(breakEvenMonths * 30);
+      console.log('📅 Break even months:', breakEvenMonths);
       
-      // Calculate inventory runway
+      const breakEvenDays = Math.ceil(breakEvenMonths * 30);
+      console.log('📅 Break even days:', breakEvenDays);
+      
       const inventoryRunwayMonths = initialOrderQty / monthlySales;
+      console.log('📦 Inventory runway months:', inventoryRunwayMonths);
+      
       const inventoryRunwayDays = Math.ceil(inventoryRunwayMonths * 30);
+      console.log('📦 Inventory runway days:', inventoryRunwayDays);
 
-      // Show the OTHER unit system for reference
+      console.log('🐛 Generating debug content...');
       const debugContent = useMetric ? 
         `<span class="font-medium">Imperial equivalent:</span> ${(cmToInches(currentProductData.dimensions.length)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.width)).toFixed(2)}" × ${(cmToInches(currentProductData.dimensions.height)).toFixed(2)}" (${(kgToPounds(currentProductData.dimensions.weight)).toFixed(2)} lbs)` :
         `<span class="font-medium">Metric equivalent:</span> ${(currentProductData.dimensions.length * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.width * 2.54).toFixed(1)}cm × ${(currentProductData.dimensions.height * 2.54).toFixed(1)}cm (${(currentProductData.dimensions.weight * 0.453592).toFixed(3)}kg)`;
 
-      // Update debug info in the top card
+      console.log('🐛 Debug content:', debugContent);
+
       const debugInfoElement = document.getElementById('debug-info')!;
+      console.log('🐛 Debug info element:', debugInfoElement);
+      
       debugInfoElement.innerHTML = debugContent;
       debugInfoElement.classList.remove('hidden');
+      console.log('✅ Debug info updated and shown');
 
-      // Render profit analysis
+      console.log('📊 Rendering results container...');
+      console.log('📊 Results container element:', resultsContainer);
+
+      // Render all results...
       resultsContainer.innerHTML = `
         <div class="space-y-4">
           <div class="border-b border-border pb-3">
             <h4 class="font-medium text-sm text-muted-foreground uppercase tracking-wide">Size Tier</h4>
             <p class="text-lg font-semibold">${sizeTier.replace('_', ' ')}</p>
           </div>
-
           <div class="pt-3">
             <h4 class="font-medium text-sm text-muted-foreground mb-2">Fee Breakdown</h4>
             <div class="space-y-1 text-sm">
@@ -693,7 +873,6 @@ import { Skeleton } from "@/components/starwind/skeleton";
               </div>
             </div>
           </div>
-          
           <div class="grid grid-cols-2 gap-3 border-t border-border pt-3">
             <div>
               <h4 class="font-medium text-sm text-muted-foreground">Net Profit (After Ads)</h4>
@@ -703,12 +882,11 @@ import { Skeleton } from "@/components/starwind/skeleton";
             </div>
             <div>
               <h4 class="font-medium text-sm text-muted-foreground">Profit Margin (After Ads)</h4>
-              <p class="text-lg font-semibold ${((profitability.netProfit - adSpend) / currentProductData.sellingPrice * 100) >= 15 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">
+              <p class="text-lg font-semibold ${((profitability.netProfit - adSpend) / currentProductData.sellingPrice * 100) >= 15 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
                 ${(((profitability.netProfit - adSpend) / currentProductData.sellingPrice) * 100).toFixed(1)}%
               </p>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <h4 class="font-medium text-sm text-muted-foreground">ROI (After Ads)</h4>
@@ -719,7 +897,6 @@ import { Skeleton } from "@/components/starwind/skeleton";
               <p class="text-lg font-semibold">${(((profitability.netProfit - adSpend) / profitability.totalCosts) * 100).toFixed(1)}%</p>
             </div>
           </div>
-
           <div class="border-t border-border pt-3">
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -737,42 +914,28 @@ import { Skeleton } from "@/components/starwind/skeleton";
         </div>
       `;
       
-      // Render success criteria
-      const passedCount = criteria.filter(c => c.passed).length;
+      console.log('✅ Results container HTML updated');
       
-      // Define color schemes with dark mode support
+      // Render criteria and timeline (keeping existing code)...
+      console.log('✅ Starting criteria rendering...');
+      const passedCount = criteria.filter(c => c.passed).length;
+      console.log('✅ Criteria passed count:', passedCount);
+      
       let colorScheme;
       if (passedCount === 4) {
-        colorScheme = {
-          bg: 'bg-green-50 dark:bg-green-950',
-          text: 'text-green-700 dark:text-green-300',
-          border: 'border-green-500 dark:border-green-600'
-        };
+        colorScheme = { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', border: 'border-green-500 dark:border-green-600' };
       } else if (passedCount === 3) {
-        colorScheme = {
-          bg: 'bg-blue-50 dark:bg-blue-950',
-          text: 'text-blue-700 dark:text-blue-300',
-          border: 'border-blue-500 dark:border-blue-600'
-        };
+        colorScheme = { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-500 dark:border-blue-600' };
       } else if (passedCount === 2) {
-        colorScheme = {
-          bg: 'bg-yellow-50 dark:bg-yellow-950',
-          text: 'text-yellow-700 dark:text-yellow-300',
-          border: 'border-yellow-500 dark:border-yellow-600'
-        };
+        colorScheme = { bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-500 dark:border-yellow-600' };
       } else if (passedCount === 1) {
-        colorScheme = {
-          bg: 'bg-orange-50 dark:bg-orange-950',
-          text: 'text-orange-700 dark:text-orange-300',
-          border: 'border-orange-500 dark:border-orange-600'
-        };
+        colorScheme = { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-500 dark:border-orange-600' };
       } else {
-        colorScheme = {
-          bg: 'bg-red-50 dark:bg-red-950',
-          text: 'text-red-700 dark:text-red-300',
-          border: 'border-red-500 dark:border-red-600'
-        };
+        colorScheme = { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', border: 'border-red-500 dark:border-red-600' };
       }
+      
+      console.log('✅ Color scheme selected:', colorScheme);
+      console.log('✅ Criteria container element:', criteriaContainer);
 
       criteriaContainer.innerHTML = `
         <div class="space-y-4">
@@ -786,7 +949,6 @@ import { Skeleton } from "@/components/starwind/skeleton";
               'Not recommended for FBA'
             }</p>
           </div>
-          
           ${criteria.map(criterion => `
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
@@ -804,11 +966,21 @@ import { Skeleton } from "@/components/starwind/skeleton";
           `).join('')}
         </div>
       `;
+      
+      console.log('✅ Criteria container HTML updated');
 
-      // Render ROI Timeline with embedded slider
-      timelineContainer.innerHTML = `
+      // Render timeline with slider (keeping existing timeline code)...
+      console.log('📈 Starting timeline rendering...');
+      console.log('📈 Timeline container element:', timelineContainer);
+      console.log('📈 Timeline variables for rendering:', { 
+        monthlySales, 
+        breakEvenDays, 
+        initialOrderQty, 
+        inventoryRunwayDays 
+      });
+
+      const timelineHTML = `
         <div class="space-y-4">
-          <!-- Sales Velocity Slider -->
           <div class="space-y-2 p-4 bg-muted/30 rounded-lg">
             <label for="timeline-monthly-sales" class="block text-sm font-medium">Expected Monthly Sales</label>
             <input type="range" id="timeline-monthly-sales" min="10" max="1000" value="${monthlySales}" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700" />
@@ -818,135 +990,230 @@ import { Skeleton } from "@/components/starwind/skeleton";
               <span>1000/mo</span>
             </div>
           </div>
-
-          <!-- Break-even Alert -->
           <div id="breakeven-alert" class="text-center p-4 rounded-lg border ${breakEvenDays <= 90 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : breakEvenDays <= 180 ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'}">
             <div id="breakeven-days" class="text-2xl font-bold ${breakEvenDays <= 90 ? 'text-green-700 dark:text-green-300' : breakEvenDays <= 180 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}">${breakEvenDays} days</div>
             <div class="text-sm text-muted-foreground">to break even</div>
           </div>
           
-          <div class="space-y-3">
-            <div class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-              <div>
-                <p class="font-medium">Initial Investment</p>
-                <p class="text-sm text-muted-foreground">${initialOrderQty} units @ ${formatCurrency(totalUnitCost)}</p>
-              </div>
-              <p class="font-semibold">${formatCurrency(initialInvestment)}</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-lg border bg-card">
+              <h4 class="font-medium text-sm text-muted-foreground mb-2">Initial Investment</h4>
+              <p class="text-2xl font-bold">${formatCurrency(initialInvestment)}</p>
+              <p class="text-xs text-muted-foreground">${initialOrderQty} units × ${formatCurrency(unitCost)}</p>
             </div>
-            
-            <div id="monthly-profit-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-              <div>
-                <p class="font-medium">Monthly Profit</p>
-                <p id="monthly-profit-detail" class="text-sm text-muted-foreground">${monthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}</p>
-              </div>
-              <p id="monthly-profit-amount" class="font-semibold ${monthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${formatCurrency(monthlyProfit)}</p>
-            </div>
-            
-            <div id="inventory-runway-card" class="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-              <div>
-                <p class="font-medium">Inventory Runway</p>
-                <p class="text-sm text-muted-foreground">Until reorder needed</p>
-              </div>
-              <p id="inventory-runway-days" class="font-semibold">${inventoryRunwayDays} days</p>
-            </div>
-            
-            <div id="reorder-warning" class="${inventoryRunwayDays < breakEvenDays ? '' : 'hidden'} p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-              <p class="text-sm font-medium text-orange-700 dark:text-orange-300">⚠️ Warning</p>
-              <p class="text-xs text-orange-600 dark:text-orange-400">You'll need to reorder before breaking even</p>
+            <div class="p-4 rounded-lg border bg-card">
+              <h4 class="font-medium text-sm text-muted-foreground mb-2">Monthly Profit</h4>
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">${formatCurrency(monthlyProfit)}</p>
+              <p class="text-xs text-muted-foreground">${monthlySales} units × ${formatCurrency(monthlyProfitPerUnit)}</p>
             </div>
           </div>
           
-          <div class="border-t pt-3">
-            <h5 class="font-medium text-sm mb-2">Milestones</h5>
-            <div id="milestones" class="space-y-2 text-sm">
+          <div class="p-4 rounded-lg border bg-card">
+            <h4 class="font-medium text-sm text-muted-foreground mb-2">Inventory Runway</h4>
+            <p class="text-lg font-bold">${inventoryRunwayDays} days</p>
+            <p class="text-xs text-muted-foreground">Time before restocking needed (${inventoryRunwayMonths.toFixed(1)} months)</p>
+          </div>
+
+          <div class="border-t pt-4">
+            <h4 class="font-medium text-sm text-muted-foreground mb-3">Key Milestones</h4>
+            <div class="space-y-2 text-sm">
               <div class="flex justify-between">
-                <span>50% ROI:</span>
-                <span>${Math.ceil(breakEvenDays / 2)} days</span>
+                <span>Break even:</span>
+                <span class="font-medium">${breakEvenDays} days</span>
               </div>
               <div class="flex justify-between">
-                <span>100% ROI:</span>
-                <span>${breakEvenDays} days</span>
+                <span>Inventory depletion:</span>
+                <span class="font-medium">${inventoryRunwayDays} days</span>
               </div>
               <div class="flex justify-between">
-                <span>200% ROI:</span>
-                <span>${breakEvenDays * 2} days</span>
+                <span>Profit after break-even:</span>
+                <span class="font-medium text-green-600 dark:text-green-400">${formatCurrency((inventoryRunwayDays - breakEvenDays) / 30 * monthlyProfit)}</span>
               </div>
             </div>
           </div>
         </div>
       `;
-
-      // Add event listener for the sales slider only
-      const timelineSlider = document.getElementById('timeline-monthly-sales') as HTMLInputElement;
-      const timelineSalesDisplay = document.getElementById('timeline-sales-display') as HTMLElement;
       
-      if (timelineSlider && timelineSalesDisplay) {
-        timelineSlider.addEventListener('input', function() {
+      console.log('📈 Timeline HTML generated:', timelineHTML);
+      
+      timelineContainer.innerHTML = timelineHTML;
+      console.log('✅ Timeline container HTML updated');
+      
+      // NOW ADD THE SLIDER EVENT LISTENER
+      const timelineSalesSlider = document.getElementById('timeline-monthly-sales') as HTMLInputElement;
+      const timelineSalesDisplay = document.getElementById('timeline-sales-display') as HTMLElement;
+      const breakevenAlert = document.getElementById('breakeven-alert') as HTMLElement;
+      const breakevenDays = document.getElementById('breakeven-days') as HTMLElement;
+
+      if (timelineSalesSlider) {
+        timelineSalesSlider.addEventListener('input', function() {
           const newMonthlySales = parseInt(this.value);
+          console.log('📈 Slider changed to:', newMonthlySales);
+          
+          // Update display
           timelineSalesDisplay.textContent = `${newMonthlySales} units/month`;
           
-          // Recalculate timeline values (initial order qty stays the same)
-          const newMonthlyProfit = newMonthlySales * monthlyProfitPerUnit;
+          // Recalculate timeline values with new monthly sales
+          const newMonthlyProfitPerUnit = (profitability.netProfit - adSpend);
+          const newMonthlyProfit = newMonthlySales * newMonthlyProfitPerUnit;
           const newBreakEvenMonths = initialInvestment / newMonthlyProfit;
           const newBreakEvenDays = Math.ceil(newBreakEvenMonths * 30);
           const newInventoryRunwayMonths = initialOrderQty / newMonthlySales;
           const newInventoryRunwayDays = Math.ceil(newInventoryRunwayMonths * 30);
           
-          // Update break-even alert
-          const breakEvenAlert = document.getElementById('breakeven-alert')!;
-          const breakEvenDaysElement = document.getElementById('breakeven-days')!;
+          console.log('📈 Recalculated values:', {
+            newMonthlySales,
+            newMonthlyProfit,
+            newBreakEvenDays,
+            newInventoryRunwayDays
+          });
           
-          const isGood = newBreakEvenDays <= 90;
-          const isOkay = newBreakEvenDays <= 180;
+          // Update break-even days display
+          breakevenDays.textContent = `${newBreakEvenDays} days`;
           
-          breakEvenAlert.className = `text-center p-4 rounded-lg border ${
-            isGood ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 
-            isOkay ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 
-            'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
-          }`;
+          // Update break-even alert styling
+          breakevenAlert.className = `text-center p-4 rounded-lg border ${newBreakEvenDays <= 90 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : newBreakEvenDays <= 180 ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'}`;
           
-          breakEvenDaysElement.className = `text-2xl font-bold ${
-            isGood ? 'text-green-700 dark:text-green-300' : 
-            isOkay ? 'text-yellow-700 dark:text-yellow-300' : 
-            'text-red-700 dark:text-red-300'
-          }`;
+          breakevenDays.className = `text-2xl font-bold ${newBreakEvenDays <= 90 ? 'text-green-700 dark:text-green-300' : newBreakEvenDays <= 180 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300'}`;
           
-          breakEvenDaysElement.textContent = `${newBreakEvenDays} days`;
-          
-          // Update monthly profit
-          document.getElementById('monthly-profit-detail')!.textContent = `${newMonthlySales} units @ ${formatCurrency(monthlyProfitPerUnit)}`;
-          const monthlyProfitAmount = document.getElementById('monthly-profit-amount')!;
-          monthlyProfitAmount.textContent = formatCurrency(newMonthlyProfit);
-          monthlyProfitAmount.className = `font-semibold ${newMonthlyProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
-          
-          // Update inventory runway
-          document.getElementById('inventory-runway-days')!.textContent = `${newInventoryRunwayDays} days`;
-          
-          // Update warning visibility
-          const reorderWarning = document.getElementById('reorder-warning')!;
-          if (newInventoryRunwayDays < newBreakEvenDays) {
-            reorderWarning.classList.remove('hidden');
-          } else {
-            reorderWarning.classList.add('hidden');
+          // Update the cards with new values
+          const monthlyProfitCard = timelineContainer.querySelector('.text-green-600.dark\\:text-green-400');
+          if (monthlyProfitCard) {
+            monthlyProfitCard.textContent = formatCurrency(newMonthlyProfit);
           }
           
-          // Update milestones
-          document.getElementById('milestones')!.innerHTML = `
-            <div class="flex justify-between">
-              <span>50% ROI:</span>
-              <span>${Math.ceil(newBreakEvenDays / 2)} days</span>
-            </div>
-            <div class="flex justify-between">
-              <span>100% ROI:</span>
-              <span>${newBreakEvenDays} days</span>
-            </div>
-            <div class="flex justify-between">
-              <span>200% ROI:</span>
-              <span>${newBreakEvenDays * 2} days</span>
-            </div>
-          `;
+          const monthlyProfitSubtext = monthlyProfitCard?.nextElementSibling;
+          if (monthlyProfitSubtext) {
+            monthlyProfitSubtext.textContent = `${newMonthlySales} units × ${formatCurrency(newMonthlyProfitPerUnit)}`;
+          }
+          
+          // Update inventory runway
+          const inventoryRunwayDaysElement = timelineContainer.querySelector('p.text-lg.font-bold');
+          if (inventoryRunwayDaysElement && !inventoryRunwayDaysElement.classList.contains('text-green-600')) {
+            inventoryRunwayDaysElement.textContent = `${newInventoryRunwayDays} days`;
+          }
+          
+          const inventoryRunwaySubtext = inventoryRunwayDaysElement?.nextElementSibling;
+          if (inventoryRunwaySubtext) {
+            inventoryRunwaySubtext.textContent = `Time before restocking needed (${newInventoryRunwayMonths.toFixed(1)} months)`;
+          }
+          
+          // Update key milestones
+          const milestones = timelineContainer.querySelectorAll('.border-t .space-y-2 .flex');
+          if (milestones.length >= 3) {
+            // Break even milestone
+            const breakEvenMilestone = milestones[0].querySelector('.font-medium');
+            if (breakEvenMilestone) {
+              breakEvenMilestone.textContent = `${newBreakEvenDays} days`;
+            }
+            
+            // Inventory depletion milestone
+            const inventoryMilestone = milestones[1].querySelector('.font-medium');
+            if (inventoryMilestone) {
+              inventoryMilestone.textContent = `${newInventoryRunwayDays} days`;
+            }
+            
+            // Profit after break-even milestone
+            const profitMilestone = milestones[2].querySelector('.font-medium');
+            if (profitMilestone) {
+              profitMilestone.textContent = formatCurrency((newInventoryRunwayDays - newBreakEvenDays) / 30 * newMonthlyProfit);
+            }
+          }
         });
+        
+        console.log('✅ Timeline slider event listener added');
       }
     }
+
+    // Add logging to form submission
+    form.addEventListener('submit', function(e) {
+      console.log('📝 Form submission started');
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      console.log('📝 Form data collected:', formData);
+      
+      const productData: ProductData = {
+        name: formData.get('name') as string,
+        sellingPrice: parseFloat(formData.get('sellingPrice') as string),
+        costOfGoods: parseFloat(formData.get('costOfGoods') as string),
+        unitShippingCost: parseFloat(formData.get('unitShippingCost') as string) || 0,
+        fbaShippingCost: parseFloat(formData.get('fbaShippingCost') as string) || 0,
+        category: formData.get('category') as string,
+        dimensions: {
+          length: parseFloat(formData.get('length') as string),
+          width: parseFloat(formData.get('width') as string),
+          height: parseFloat(formData.get('height') as string),
+          weight: parseFloat(formData.get('weight') as string)
+        }
+      };
+
+      console.log('📝 Product data parsed:', productData);
+
+      if (!productData.name || !productData.category || 
+          isNaN(productData.sellingPrice) || isNaN(productData.costOfGoods) ||
+          isNaN(productData.dimensions.length) || isNaN(productData.dimensions.width) ||
+          isNaN(productData.dimensions.height) || isNaN(productData.dimensions.weight)) {
+        console.error('❌ Validation failed');
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      console.log('✅ Validation passed');
+      currentProductData = productData;
+      console.log('✅ currentProductData set:', currentProductData);
+      
+      console.log('📋 Calling updateProductSummary...');
+      updateProductSummary(productData);
+      
+      console.log('🧮 Calling calculateResults...');
+      calculateResults();
+    });
+
+    unitToggle.addEventListener("starwind-switch:change", (e: Event) => {
+      const event = e as SwitchChangeEvent;
+      if (event.detail.switchId === "unit-toggle") {
+        unitToggleHandler.setImperial(event.detail.checked);
+        if (currentProductData) {
+          updateProductSummary(currentProductData);
+          calculateResults();
+        }
+      }
+    });
+
+    saveProductBtn.addEventListener('click', handleSaveProduct);
+    clearAllBtn.addEventListener('click', handleClearAllProducts);
+
+    (window as any).loadProduct = loadProduct;
+    (window as any).deleteProduct = handleDeleteProduct;
+
+    // 4. INITIALIZE
+    console.log('🚀 Starting initialization...');
+    
+    productSkeleton.classList.remove('hidden');
+    console.log('✅ Product skeleton shown');
+    
+    initializeButtonVisibility();
+    console.log('✅ Button visibility initialized');
+    
+    updateSavedProductsUI();
+    console.log('✅ Saved products UI updated');
+    
+    console.log('🚀 Calculator initialization complete!');
   });
 </script>
+
+<!-- Success Toast (positioned fixed) -->
+<div id="save-toast" class="fixed top-4 right-4 z-50 hidden">
+  <div class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4 shadow-lg">
+    <div class="flex items-center"></div>
+      <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      <div>
+        <p class="font-medium text-green-800 dark:text-green-200">Product Saved!</p>
+        <p class="text-sm text-green-700 dark:text-green-300">Added to your saved products</p>
+      </div>
+    </div>
+  </div>
+</div>
