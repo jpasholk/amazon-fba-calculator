@@ -703,17 +703,73 @@ import { Skeleton } from "@/components/starwind/skeleton";
       });
     }
 
+    function showSaveToast(): void {
+      saveToast.classList.remove('hidden'); // Regular hidden works fine for toast
+      setTimeout(() => {
+        saveToast.classList.add('hidden');
+      }, 3000);
+    }
+
+    function getCurrentCalculations() {
+      if (!currentProductData) return null;
+
+      const unitState = unitToggleHandler.getUnitState();
+      const useMetric = !unitState.isImperialUnits;
+      
+      const averageUnitsElement = document.getElementById('average-units') as HTMLInputElement;
+      const averageUnits = averageUnitsElement ? parseInt(averageUnitsElement.value) || 100 : 100;
+      
+      const fees = calculateAmazonFees(currentProductData, useMetric, { averageUnitsStored: averageUnits });
+      const profitability = calculateProfitability(currentProductData, fees);
+      const criteria = evaluateSuccessCriteria(currentProductData, profitability, useMetric);
+      const sizeTier = calculateFBASizeTier(currentProductData.dimensions, useMetric);
+
+      return {
+        fees,
+        profitability,
+        criteria,
+        sizeTier,
+        useMetric,
+        averageUnits
+      };
+    }
+
     function handleSaveProduct(): void {
       if (currentProductData) {
         try {
+          console.log('💾 Attempting to save product:', currentProductData);
+          
           const currentCalculations = getCurrentCalculations();
+          console.log('💾 Current calculations:', currentCalculations);
+          
+          if (!currentCalculations) {
+            console.error('❌ No calculations available');
+            alert('Please calculate the product first before saving');
+            return;
+          }
+
           saveProduct(currentProductData, currentCalculations);
+          console.log('✅ Product saved successfully');
+          
           updateSavedProductsUI(); // This will show the load button if it was hidden
           showSaveToast();
         } catch (error) {
-          console.error('Error saving product:', error);
-          alert('Failed to save product. Storage might be full.');
+          console.error('❌ Error saving product:', error);
+          
+          // More specific error handling
+          if (error instanceof Error) {
+            if (error.message.includes('quota') || error.message.includes('storage')) {
+              alert('Storage is full. Please delete some saved products and try again.');
+            } else {
+              alert(`Failed to save product: ${error.message}`);
+            }
+          } else {
+            alert('Failed to save product. Please try again.');
+          }
         }
+      } else {
+        console.error('❌ No product data to save');
+        alert('No product data available to save');
       }
     }
     
@@ -1174,6 +1230,8 @@ import { Skeleton } from "@/components/starwind/skeleton";
       const event = e as SwitchChangeEvent;
       if (event.detail.switchId === "unit-toggle") {
         unitToggleHandler.setImperial(event.detail.checked);
+        
+        // Only recalculate if we have product data
         if (currentProductData) {
           updateProductSummary(currentProductData);
           calculateResults();
